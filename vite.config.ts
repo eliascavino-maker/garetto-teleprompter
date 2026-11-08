@@ -2,8 +2,9 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
-// En el build, la app vive en https://<usuario>.github.io/garetto-teleprompter/
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/garetto-teleprompter/' : '/',
+// La app vive en https://<usuario>.github.io/garetto-teleprompter/. Se usa la
+// misma ruta en desarrollo y en preview para que todo se comporte igual.
+export default defineConfig({
+  base: '/garetto-teleprompter/',
   plugins: [react()],
-}))
+})

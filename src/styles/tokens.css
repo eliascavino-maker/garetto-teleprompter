@@ -1,0 +1,101 @@
+/*
+ * Tokens del sistema de diseño (fuente: docs/propuesta.html).
+ * Un solo tema oscuro: es software de escenario.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Consola: grafito cálido con un toque violeta. 0 fondo → 4 menú */
+  --ink-0: #120f14;
+  --ink-1: #19161c;
+  --ink-2: #201c24;
+  --ink-3: #28232d;
+  --ink-4: #322c38;
+
+  /* Bordes finos: la profundidad sale de acá, no de sombras */
+  --line: rgb(236 226 255 / 0.08);
+  --line-2: rgb(236 226 255 / 0.14);
+  --line-3: rgb(236 226 255 / 0.22);
+
+  /* Texto */
+  --chalk: #efeaf3;
+  --chalk-2: #bdb5c6;
+  --chalk-3: #958c9f;
+  --chalk-4: #5f5868; /* solo decorativo: no pasa contraste para texto */
+
+  /* Marca La Garetto */
+  --garetto: #452d66;
+  --garetto-deep: #352257;
+  --lavanda: #cfc2de;
+  --foco: #a585e0; /* 7,0:1 sobre #000 */
+
+  /* Semánticos */
+  --aire: #f0565b;
+  --aire-text: #ff8a8e;
+  --ok: #3fd08a;
+  --ok-text: #7be3b0;
+  --alerta: #f2b544;
+  --alerta-text: #f6cf84;
+  --negro: #000;
+
+  /* Pantalla de Gabi */
+  --gabi-bg: #000;
+  --gabi-now: var(--foco);
+  --gabi-next: rgb(255 255 255 / 0.74);
+  --gabi-next-2: rgb(255 255 255 / 0.42);
+  --gabi-prev: rgb(255 255 255 / 0.16);
+
+  /* Tipografía: escala 1,25 sobre base 14 */
+  --font-ui: 'Montserrat Variable', 'Montserrat', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --font-lectura: 'Atkinson Hyperlegible', 'Montserrat Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-kbd: ui-sans-serif, system-ui, 'Segoe UI Symbol', 'Segoe UI', sans-serif;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+
+  /* Espaciado */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* Radios */
+  --r-key: 4px;
+  --r-btn: 8px;
+  --r-panel: 12px;
+  --r-modal: 16px;
+  --r-full: 999px;
+
+  /* Sombra: solo para lo que flota (toasts, menús, modales) */
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.5);
+
+  /* Movimiento. Nunca ease-in. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms; /* respuesta al tocar */
+  --dur-state: 180ms; /* hover, estado, foco */
+  --dur-line: 220ms; /* la letra pasa a la línea siguiente */
+  --dur-in: 240ms; /* entrada de carteles y toasts */
+  --dur-out: 160ms;
+  --press-scale: 0.97;
+
+  /* Controles */
+  --control-h: 44px;
+  --control-h-lg: 56px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    /* Sin desplazamientos: solo fundidos cortos */
+    --dur-line: 120ms;
+    --dur-in: 120ms;
+    --dur-out: 120ms;
+    --press-scale: 1;
+  }
+}

@@ -66,4 +66,7 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
 - Supabase: proyecto `garetto-teleprompter` (ref `hsyibrsvhuohmwwkzocc`, `sa-east-1`, org "La Garetto Tel"), vinculado con `npx supabase link`. El esquema inicial ya está aplicado.
 - `.env` (commiteado) tiene `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. `.env.local` tiene `SUPABASE_DB_PASSWORD`.
 - GitHub CLI no está en el PATH de las terminales abiertas antes de instalarlo: usar `C:\Program Files\GitHub CLI\gh.exe`. `npx supabase login` y `gh auth login` piden TTY: el usuario los corre en su terminal, o Claude los lanza en segundo plano y le pasa el código.
-- Próximo paso: etapa 2, sistema de diseño en código.
+- Etapa 2 terminada: tokens en `src/styles/tokens.css`, base en `src/styles/base.css`, componentes en `src/ui/` (Button, Pad, Pill, Cue, Switch, Segmented, Slider, Panel, Toast, Wordmark provisorio y clase `.papel`). Fuentes autoalojadas con `@fontsource-variable/montserrat` y `@fontsource/atkinson-hyperlegible`. Por ahora la app muestra `src/sistema/Sistema.tsx` como muestra del sistema.
+- Vite usa `base: '/garetto-teleprompter/'` también en desarrollo y preview: la app local está en `http://localhost:5173/garetto-teleprompter/`.
+- Falta rearmar el logo como SVG: `Wordmark` es texto provisorio.
+- Próximo paso: etapa 3, modelo de datos, IndexedDB y parser de letras, con tests.
