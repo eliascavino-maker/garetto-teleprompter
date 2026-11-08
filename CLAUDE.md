@@ -62,7 +62,8 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
 
 ## Estado al 2026-11-08
 
-- El proyecto está creado con Vite, `npx supabase init` y `git init`, pero todavía no tiene commits.
-- El esquema inicial está escrito y todavía no se aplicó.
-- GitHub CLI está instalado (`C:\Program Files\GitHub CLI\gh.exe`).
-- Próximo paso: el usuario corre `gh auth login --web --git-protocol https` y `npx supabase login`. Después se crea el proyecto de Supabase en `sa-east-1` (es el último proyecto gratis de la cuenta), se aplica el esquema, se crea el repo `garetto-teleprompter` y se configura el deploy a GitHub Pages.
+- Etapa 1 terminada. Repo público: https://github.com/eliascavino-maker/garetto-teleprompter. Sitio: https://eliascavino-maker.github.io/garetto-teleprompter/ (deploy con `.github/workflows/deploy.yml`: lint, build y Pages).
+- Supabase: proyecto `garetto-teleprompter` (ref `hsyibrsvhuohmwwkzocc`, `sa-east-1`, org "La Garetto Tel"), vinculado con `npx supabase link`. El esquema inicial ya está aplicado.
+- `.env` (commiteado) tiene `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. `.env.local` tiene `SUPABASE_DB_PASSWORD`.
+- GitHub CLI no está en el PATH de las terminales abiertas antes de instalarlo: usar `C:\Program Files\GitHub CLI\gh.exe`. `npx supabase login` y `gh auth login` piden TTY: el usuario los corre en su terminal, o Claude los lanza en segundo plano y le pasa el código.
+- Próximo paso: etapa 2, sistema de diseño en código.
