@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeft,
-  ArrowRight,
   ChevronsLeft,
   ChevronsRight,
   FlipHorizontal2,
@@ -113,10 +111,10 @@ export function Ensayo() {
 
           <div className="ens-transport">
             <Button icon={ChevronsLeft} kbd="⇧←" onClick={show.actions.prevPart} aria-label="Parte anterior" />
-            <Button icon={ArrowLeft} kbd="←" onClick={show.actions.prev} center>
+            <Button kbd="←" onClick={show.actions.prev} center>
               Anterior
             </Button>
-            <Button variant="primary" icon={ArrowRight} kbd="→" onClick={show.actions.next} center size="lg">
+            <Button variant="primary" kbd="→" onClick={show.actions.next} center size="lg">
               Siguiente
             </Button>
             <Button icon={ChevronsRight} kbd="⇧→" onClick={show.actions.nextPart} aria-label="Parte siguiente" />

@@ -94,13 +94,19 @@
   font-style: italic;
 }
 
+/* Columna en flex y sin encoger: si la ventana es baja, la columna hace scroll
+   en vez de achicar la vista previa y tapar los botones. */
 .ens-side {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--s-3);
-  align-content: start;
+  min-height: 0;
   padding: var(--s-3);
   overflow: auto;
   background: var(--ink-1);
+}
+.ens-side > * {
+  flex: none;
 }
 .ens-preview {
   aspect-ratio: 16 / 9;
@@ -118,7 +124,7 @@
 }
 .ens-transport {
   display: grid;
-  grid-template-columns: auto 1fr 1.4fr auto;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) auto;
   gap: var(--s-2);
   align-items: center;
 }

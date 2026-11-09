@@ -181,11 +181,44 @@
   line-height: 1.08;
   text-wrap: balance;
 }
+/*
+ * Marcar la línea: la nueva se pinta de violeta de izquierda a derecha y la
+ * anterior se despinta, mientras la barra de la izquierda se desliza.
+ * El degradado es mitad violeta y mitad gris; mover el fondo hace el barrido.
+ */
 .g-parte--marca p {
-  color: rgb(255 255 255 / 0.62);
+  align-self: flex-start;
+  width: fit-content;
+  color: transparent;
+  background: linear-gradient(90deg, var(--foco) 46%, rgb(255 255 255 / 0.62) 54%) 100% 0 / 220% 100% no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* La que se suelta se despinta rápido */
+  transition: background-position var(--dur-state) var(--ease-out);
 }
 .g-parte--marca p.g-now {
-  color: var(--foco);
+  background-position: 0 0;
+  /* La nueva se pinta con un barrido parejo, que se vea avanzar */
+  transition: background-position var(--dur-paint) var(--ease-paint);
+}
+.g-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--g) * 10);
+  border-radius: calc(var(--g) * 10);
+  background: var(--foco);
+  opacity: 0;
+  transition:
+    transform var(--dur-paint) var(--ease-move),
+    height var(--dur-paint) var(--ease-move),
+    opacity var(--dur-state) var(--ease-out);
+}
+/* El contenedor recorta lo que se sale: se corre a la izquierda para dejar
+   lugar a la barra, y la letra queda en el mismo lugar. */
+.g-parte--marca {
+  left: calc(var(--g) * 72);
+  padding-left: calc(var(--g) * 48);
 }
 .g-inline-cues {
   display: inline-flex;
@@ -257,6 +290,13 @@
 .gabi--c .g-parte {
   align-items: center;
   text-align: center;
+}
+.gabi--c .g-parte--marca p {
+  align-self: center;
+}
+/* En el estilo C la letra va centrada: alcanza con el barrido de color. */
+.gabi--c .g-marker {
+  display: none;
 }
 .gabi--c .g-part {
   left: 50%;

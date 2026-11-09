@@ -122,8 +122,28 @@ function Parte({ view }: { view: Extract<LyricView, { kind: 'parte' }> }) {
     return () => ro.disconnect()
   }, [pageKey])
 
+  // La barra de la línea marcada se desliza hasta la nueva posición.
+  const marker = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const el = box.current
+    const bar = marker.current
+    if (!el || !bar) return
+    const place = () => {
+      const line = el.querySelector<HTMLElement>('p.g-now')
+      bar.style.opacity = line ? '1' : '0'
+      if (!line) return
+      bar.style.transform = `translateY(${line.offsetTop}px)`
+      bar.style.height = `${line.offsetHeight}px`
+    }
+    place()
+    const ro = new ResizeObserver(place)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [view.mark, pageKey])
+
   return (
     <div ref={box} className={cx('g-parte', view.mark && 'g-parte--marca')} key={pageKey}>
+      <span ref={marker} className="g-marker" aria-hidden />
       {view.lines.map((l) => (
         <p key={l.id} className={cx(l.id === view.mark && 'g-now')}>
           {l.text}

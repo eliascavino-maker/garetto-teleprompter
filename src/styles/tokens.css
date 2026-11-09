@@ -81,6 +81,8 @@
   --dur-press: 120ms; /* respuesta al tocar */
   --dur-state: 180ms; /* hover, estado, foco */
   --dur-line: 220ms; /* la letra pasa a la línea siguiente */
+  --dur-paint: 520ms; /* la línea marcada se pinta de izquierda a derecha */
+  --ease-paint: cubic-bezier(0.65, 0, 0.35, 1); /* barrido parejo, sin arranque brusco */
   --dur-in: 240ms; /* entrada de carteles y toasts */
   --dur-out: 160ms;
   --press-scale: 0.97;
@@ -94,6 +96,7 @@
   :root {
     /* Sin desplazamientos: solo fundidos cortos */
     --dur-line: 120ms;
+    --dur-paint: 120ms;
     --dur-in: 120ms;
     --dur-out: 120ms;
     --press-scale: 1;
