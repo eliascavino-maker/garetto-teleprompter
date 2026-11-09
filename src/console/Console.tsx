@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from 'react'
-import { CircleCheck, Monitor, MonitorUp, Music, Radio, RefreshCw, Square, TriangleAlert, WifiOff } from 'lucide-react'
+import { CircleCheck, CircleHelp, Monitor, MonitorUp, Music, Radio, RefreshCw, Square, TriangleAlert, WifiOff } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useWakeLock } from '../platform/wakeLock'
 import type { ScreenInfo } from '../show/channel'
@@ -16,7 +16,10 @@ import type { Notice } from '../ui/labels'
 import { COUNTDOWN_S, ControlPanel } from './ControlPanel'
 import { LyricsPanel } from './LyricsPanel'
 import { SetlistPanel } from './SetlistPanel'
-import { usePrefs, type ConsolePrefs } from './prefs'
+import { Guide } from './Guide'
+import { Help } from './Help'
+import { useGuidePrefs, usePrefs, type ConsolePrefs } from './prefs'
+import { useReducedMotion } from '../platform/motion'
 import './console.css'
 
 /**
@@ -26,6 +29,8 @@ import './console.css'
 export function Console() {
   const data = useData()
   const [prefs, setPrefs] = usePrefs()
+  const [guide, setGuide] = useGuidePrefs()
+  const [help, setHelp] = useState(false)
   const [popupBlocked, setPopupBlocked] = useState(false)
   const [library, setLibrary] = useState<{ start: LibraryStart } | null>(null)
   const [notice, setNotice] = useState<(Notice & { id: number }) | null>(null)
@@ -108,6 +113,7 @@ export function Console() {
 
   const openLibrary = useCallback((start: LibraryStart) => setLibrary({ start }), [])
   const closeLibrary = useCallback(() => setLibrary(null), [])
+  const closeHelp = useCallback(() => setHelp(false), [])
 
   /* ---------- Atajos ---------- */
 
@@ -123,6 +129,13 @@ export function Console() {
         return
       }
       // Con Canciones abierto, los atajos del show no corren.
+      // La ayuda tapa todo: mientras está abierta, los atajos no corren.
+      if (help) return
+      if (e.key === '?') {
+        e.preventDefault()
+        setHelp(true)
+        return
+      }
       if (library) return
       if (e.ctrlKey || e.metaKey || e.altKey) return
       const a = show.actions
@@ -164,7 +177,7 @@ export function Console() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [show.actions, nav, messages, library, notice, runUndo])
+  }, [show.actions, nav, messages, library, help, notice, runUndo])
 
   /* ---------- Acciones de datos ---------- */
 
@@ -197,6 +210,7 @@ export function Console() {
 
   // Que no se apague la pantalla de la notebook durante el show.
   useWakeLock(show.connected || prefs.showStartedAt !== null)
+  useReducedMotion(data.device.reduceMotion ?? false)
 
   // App sin internet: avisa cuando quedó lista y cuando hay una versión nueva.
   // Nunca se actualiza sola: el operador elige cuándo.
@@ -216,7 +230,7 @@ export function Console() {
     <>
     <div
       className="con"
-      inert={!!library}
+      inert={!!library || help}
       style={{ '--col-setlist': `${prefs.columns.setlist}px`, '--col-controls': `${prefs.columns.controls}px` } as React.CSSProperties}
     >
       <header className="con-bar">
@@ -270,6 +284,7 @@ export function Console() {
               title={show.screen?.fullscreen ? 'Traer la pantalla al frente' : 'Mandar la pantalla al monitor'}
             />
           )}
+          <Button size="sm" variant="ghost" icon={CircleHelp} onClick={() => setHelp(true)} aria-label="Ayuda (?)" title="Ayuda y atajos (?)" />
         </div>
       </header>
 
@@ -306,7 +321,14 @@ export function Console() {
           max={460}
           onChange={(v) => setPrefs((p) => ({ columns: { ...p.columns, setlist: v } }))}
         />
-        <LyricsPanel song={song} show={show} position={position} onEdit={(id) => openLibrary({ songId: id })} />
+        <LyricsPanel
+          song={song}
+          show={show}
+          position={position}
+          onEdit={(id) => openLibrary({ songId: id })}
+          empty={data.songs.length === 0 ? 'sin-canciones' : setlist ? 'setlist-vacio' : 'sin-setlist'}
+          onOpenLibrary={() => openLibrary(null)}
+        />
         <Splitter
           label="Ancho de los controles"
           value={prefs.columns.controls}
@@ -324,6 +346,27 @@ export function Console() {
           onDevice={(d) => void store.saveDeviceSettings(d)}
         />
       </main>
+
+      {!guide.dismissed && (
+        <Guide
+          progress={{
+            songs: data.songs.length > 0,
+            setlist: data.setlists.some((s) => s.items.length > 0),
+            screenOpen: show.connected && !show.screen?.fullscreen,
+            screen: show.connected && !!show.screen?.fullscreen,
+          }}
+          hasSetlist={!!setlist}
+          // En pleno show queda achicada para no tapar la letra.
+          collapsed={guide.collapsed || prefs.showStartedAt !== null}
+          onCollapse={(collapsed) => setGuide({ collapsed })}
+          onClose={() => setGuide({ dismissed: true })}
+          onOpenLibrary={() => openLibrary(null)}
+          onLoadExample={() => void loadExample()}
+          onCreateSetlist={() => void createSetlist()}
+          onFocusSearch={() => searchRef.current?.focus()}
+          onOpenScreen={() => void open()}
+        />
+      )}
 
       {(popupBlocked || data.error) && (
         <div className="con-toast">
@@ -348,6 +391,15 @@ export function Console() {
         onClose={closeLibrary}
         onAddToSetlist={(id) => setlist && void store.saveSetlist({ ...setlist, items: sl.addSong(setlist.items, id) })}
         notify={notify}
+      />
+    )}
+
+    {help && (
+      <Help
+        reduceMotion={data.device.reduceMotion ?? false}
+        onReduceMotion={(reduceMotion) => void store.saveDeviceSettings({ reduceMotion })}
+        onShowGuide={() => setGuide({ dismissed: false, collapsed: false })}
+        onClose={closeHelp}
       />
     )}
 

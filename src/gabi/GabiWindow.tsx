@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Maximize } from 'lucide-react'
+import { useReducedMotion } from '../platform/motion'
 import { useWakeLock } from '../platform/wakeLock'
 import { GabiLink } from '../show/channel'
 import type { ShowState } from '../show/view'
@@ -24,6 +25,7 @@ export function GabiWindow() {
   const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
   const [hint, setHint] = useState(true)
   const wakeLock = useWakeLock(true)
+  useReducedMotion(state?.device.reduceMotion ?? false)
   const link = useRef<GabiLink | null>(null)
 
   useEffect(() => {

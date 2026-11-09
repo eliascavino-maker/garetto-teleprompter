@@ -107,4 +107,10 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - La ventana de Gabi le manda a la consola `ScreenInfo` (pantalla completa, tamaño, Wake Lock) en el saludo y el latido. La consola lo muestra en la pastilla ("falta pantalla completa"). Un clic en la ventana de Gabi la pone en pantalla completa; mientras falte, muestra un aviso que se esconde si no se mueve el mouse.
   - e2e: `e2e/offline.spec.ts` corre contra `vite preview` (puerto 5198, segundo `webServer` de Playwright) y prueba consola, ventana de Gabi e importación sin internet.
   - Falta probarlo con un monitor de verdad por HDMI (permiso de Window Management y pantalla completa en el segundo monitor).
-- Próximo paso: etapa 8, onboarding, estados vacíos, ayuda con "?" y movimiento reducido.
+- Etapa 8 terminada:
+  - `src/console/Guide.tsx`: primeros pasos (cargar canciones, armar el setlist, conectar la pantalla). Cada paso se marca solo; solo el que toca muestra el detalle. Flota abajo a la izquierda de la letra, se achica (en pleno show queda achicada) y se cierra. Estado en localStorage (`garetto-teleprompter:guia`).
+  - `src/console/Help.tsx`: ayuda con `?` o el botón de la barra. Atajos, cómo conectar el monitor, formato de la letra y ajustes del equipo ("Reducir movimiento" y "Ver los primeros pasos"). Mientras está abierta, los atajos del show no corren.
+  - Estados vacíos de la letra: sin canciones, sin setlist, setlist vacío y tema sin letra.
+  - Movimiento reducido: `src/platform/motion.ts` pone `data-motion="reduced"` en `<html>` si lo pide Windows o el ajuste del equipo (`DeviceSettings.reduceMotion`, viaja a la ventana de Gabi en el estado). Las reglas están en `base.css`.
+  - e2e: `e2e/guia.spec.ts`. Las demás pruebas arrancan con la guía cerrada (`sinGuia` en `e2e/fixtures.ts`).
+- Próximo paso: etapa 9, revisión con Playwright y capturas en 1366×768, 1920×1080 y tablet.

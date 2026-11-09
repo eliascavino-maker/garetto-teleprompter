@@ -86,6 +86,8 @@ export interface DeviceSettings {
   mirror: boolean
   /** Margen de seguridad en % del ancho, por si el monitor recorta los bordes. */
   marginPct: number
+  /** Menos movimiento en las dos pantallas, aunque Windows no lo pida. */
+  reduceMotion?: boolean
 }
 
 export const LIMITS = {

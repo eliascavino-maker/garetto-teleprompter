@@ -87,9 +87,9 @@ describe('ajustes', () => {
   })
 
   it('el montaje del monitor se guarda solo en el equipo', async () => {
-    expect(await repo.getDeviceSettings()).toEqual({ rotation: 0, mirror: false, marginPct: 0 })
-    await repo.saveDeviceSettings({ rotation: 180 })
-    expect(await repo.getDeviceSettings()).toEqual({ rotation: 180, mirror: false, marginPct: 0 })
+    expect(await repo.getDeviceSettings()).toEqual({ rotation: 0, mirror: false, marginPct: 0, reduceMotion: false })
+    await repo.saveDeviceSettings({ rotation: 180, reduceMotion: true })
+    expect(await repo.getDeviceSettings()).toEqual({ rotation: 180, mirror: false, marginPct: 0, reduceMotion: true })
   })
 })
 

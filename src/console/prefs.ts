@@ -50,6 +50,41 @@ function write(prefs: ConsolePrefs) {
   }
 }
 
+/* ---------- Guía de primeros pasos ---------- */
+
+export interface GuidePrefs {
+  /** Se cerró: no vuelve a aparecer sola (se abre desde la ayuda). */
+  dismissed: boolean
+  /** Achicada a una pastilla. */
+  collapsed: boolean
+}
+
+export const GUIDE_KEY = 'garetto-teleprompter:guia'
+
+function readGuide(): GuidePrefs {
+  try {
+    return { dismissed: false, collapsed: false, ...JSON.parse(localStorage.getItem(GUIDE_KEY) ?? '{}') }
+  } catch {
+    return { dismissed: false, collapsed: false }
+  }
+}
+
+export function useGuidePrefs() {
+  const [guide, setGuide] = useState(readGuide)
+  const update = useCallback((patch: Partial<GuidePrefs>) => {
+    setGuide((g) => {
+      const next = { ...g, ...patch }
+      try {
+        localStorage.setItem(GUIDE_KEY, JSON.stringify(next))
+      } catch {
+        // Sin almacenamiento la guía vuelve a aparecer la próxima vez; no pasa nada.
+      }
+      return next
+    })
+  }, [])
+  return [guide, update] as const
+}
+
 export function usePrefs() {
   const [prefs, setPrefs] = useState(read)
   const update = useCallback((patch: Partial<ConsolePrefs> | ((p: ConsolePrefs) => Partial<ConsolePrefs>)) => {

@@ -1,16 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { PREVIEW_URL } from '../playwright.config.ts'
-import { docx } from './fixtures.ts'
+import { docx, monitorGrande, sinGuia } from './fixtures.ts'
 
 const SHOTS = process.env.SHOTS_DIR
 
-// En Playwright una ventana emergente cree que el monitor mide lo mismo que
-// ella, y parece estar con F11. Se simula un monitor de 1920×1080.
 test.beforeEach(async ({ context }) => {
-  await context.addInitScript(() => {
-    Object.defineProperty(screen, 'width', { get: () => 1920 })
-    Object.defineProperty(screen, 'height', { get: () => 1080 })
-  })
+  await sinGuia(context)
+  await monitorGrande(context)
 })
 
 test('sin internet: la consola, la pantalla de Gabi y la importación siguen andando', async ({ page, context }) => {

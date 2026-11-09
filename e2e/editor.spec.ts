@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
-import { docx, latin1Txt, pdf } from './fixtures.ts'
+import { docx, latin1Txt, pdf, sinGuia } from './fixtures.ts'
+
+test.beforeEach(({ context }) => sinGuia(context))
 
 const SHOTS = process.env.SHOTS_DIR
 

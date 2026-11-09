@@ -3,8 +3,9 @@ import { formatDuration } from '../data/setlist'
 import type { Song } from '../data/types'
 import { findStep, pageOfLine } from '../show/cursor'
 import type { ShowController } from '../show/useShow'
-import { Pencil } from 'lucide-react'
-import { Button, Cue } from '../ui/components'
+import { ListMusic, Music, Pencil } from 'lucide-react'
+import { isReducedMotion } from '../platform/motion'
+import { Button, Cue, Kbd } from '../ui/components'
 import { cx } from '../ui/cx'
 import { SONG_KIND_LABEL } from '../ui/labels'
 
@@ -14,11 +15,16 @@ export function LyricsPanel({
   show,
   position,
   onEdit,
+  empty,
+  onOpenLibrary,
 }: {
   song: Song | null
   show: ShowController
   position: string | null
   onEdit: (songId: string) => void
+  /** Qué falta cuando no hay tema para mostrar. */
+  empty: 'sin-canciones' | 'sin-setlist' | 'setlist-vacio'
+  onOpenLibrary: () => void
 }) {
   const body = useRef<HTMLDivElement>(null)
   const step = show.step
@@ -29,7 +35,7 @@ export function LyricsPanel({
     if (!el || !body.current) return
     const box = body.current
     const top = el.offsetTop - box.clientHeight / 3
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduce = isReducedMotion()
     box.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' })
   }, [step, song?.id])
 
@@ -37,7 +43,30 @@ export function LyricsPanel({
     return (
       <section className="panel con-lyrics" aria-label="Letra">
         <div className="con-empty con-empty--big">
-          <p>Elegí un tema del setlist para empezar.</p>
+          {empty === 'sin-canciones' ? (
+            <>
+              <Music aria-hidden className="con-empty__icon" />
+              <p>Todavía no hay canciones.</p>
+              <p className="con-muted">Cargalas en Canciones: pegando la letra o con archivos .txt, .docx o PDF.</p>
+              <Button variant="primary" icon={Music} onClick={onOpenLibrary}>
+                Abrir Canciones
+              </Button>
+            </>
+          ) : empty === 'setlist-vacio' ? (
+            <>
+              <ListMusic aria-hidden className="con-empty__icon" />
+              <p>El setlist está vacío.</p>
+              <p className="con-muted">
+                Buscá los temas en la columna de la izquierda (<Kbd>/</Kbd>) y se agregan en orden.
+              </p>
+            </>
+          ) : (
+            <>
+              <ListMusic aria-hidden className="con-empty__icon" />
+              <p>Todavía no hay un setlist.</p>
+              <p className="con-muted">Creá uno a la izquierda para el próximo show.</p>
+            </>
+          )}
         </div>
       </section>
     )
@@ -65,7 +94,15 @@ export function LyricsPanel({
         </div>
       </header>
       <div className="ly" ref={body}>
-        {totalLines === 0 && song.sections.length === 0 && <p className="con-muted">Este tema no tiene letra cargada.</p>}
+        {totalLines === 0 && song.sections.length === 0 && (
+          <div className="con-empty">
+            <p>Este tema no tiene letra cargada.</p>
+            <p className="con-muted">En la pantalla de Gabi se ve el logo hasta que pases al tema siguiente.</p>
+            <Button icon={Pencil} onClick={() => onEdit(song.id)}>
+              Cargar la letra
+            </Button>
+          </div>
+        )}
         {song.sections.map((s, si) => {
           const partNow = step?.section === si
           const partDone = step ? si < step.section : false

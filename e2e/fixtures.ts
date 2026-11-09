@@ -1,4 +1,21 @@
+import type { BrowserContext } from '@playwright/test'
 import JSZip from 'jszip'
+
+/** Arranca con la guía de primeros pasos cerrada, para que no tape la letra. */
+export function sinGuia(context: BrowserContext) {
+  return context.addInitScript(() => localStorage.setItem('garetto-teleprompter:guia', JSON.stringify({ dismissed: true })))
+}
+
+/**
+ * En Playwright una ventana emergente cree que el monitor mide lo mismo que
+ * ella, y parece estar con F11. Se simula un monitor de 1920×1080.
+ */
+export function monitorGrande(context: BrowserContext) {
+  return context.addInitScript(() => {
+    Object.defineProperty(screen, 'width', { get: () => 1920 })
+    Object.defineProperty(screen, 'height', { get: () => 1080 })
+  })
+}
 
 /* Archivos de prueba armados en el momento: .txt, .docx y PDF. */
 

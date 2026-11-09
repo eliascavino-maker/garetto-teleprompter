@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
+import { sinGuia } from './fixtures.ts'
+
+test.beforeEach(({ context }) => sinGuia(context))
 
 const SHOTS = process.env.SHOTS_DIR
 

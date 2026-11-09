@@ -18,7 +18,7 @@ const uuid: NewId = () => crypto.randomUUID()
 
 export const DEFAULT_QUICK_MESSAGES = ['Repetí el coro', 'Más lento', 'Último coro', 'Cortamos acá', 'Enganchamos']
 
-export const DEFAULT_DEVICE: DeviceSettings = { rotation: 0, mirror: false, marginPct: 0 }
+export const DEFAULT_DEVICE: DeviceSettings = { rotation: 0, mirror: false, marginPct: 0, reduceMotion: false }
 
 const KV_BAND = 'band'
 const KV_DEVICE = 'device'

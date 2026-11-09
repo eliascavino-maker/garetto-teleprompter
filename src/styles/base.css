@@ -71,3 +71,30 @@ textarea {
     scroll-behavior: auto;
   }
 }
+
+/*
+ * Movimiento reducido (Windows o el ajuste del equipo, ver platform/motion.ts):
+ * nada se desliza ni crece, todo aparece con un fundido corto y el logo queda quieto.
+ */
+@keyframes fundido {
+  from {
+    opacity: 0;
+  }
+}
+:root[data-motion='reduced'] {
+  --dur-line: 120ms;
+  --dur-paint: 120ms;
+  --dur-in: 120ms;
+  --dur-out: 120ms;
+  --press-scale: 1;
+  scroll-behavior: auto;
+}
+:root[data-motion='reduced'] :is(.g-lines, .g-cartel, .toast, .lib, .lib-drop, .lib-confirm__box, .gabi-hint, .guia, .help__box) {
+  animation-name: fundido;
+}
+:root[data-motion='reduced'] :is(.g-espera__logo, .sis-espera__logo) {
+  animation: none;
+}
+:root[data-motion='reduced'] .ed-spin {
+  animation-duration: 3s;
+}
