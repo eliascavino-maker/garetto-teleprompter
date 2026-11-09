@@ -1,7 +1,7 @@
 import { Guitar, Pause, Repeat, Scissors, type LucideIcon } from 'lucide-react'
+import type { CueKind } from '../data/types'
 
-/** Indicaciones que se pueden marcar en una línea de la letra. */
-export type CueKind = 'silencio' | 'corte' | 'x2' | 'solo'
+export type { CueKind }
 
 export const CUES: Record<CueKind, { label: string; icon: LucideIcon }> = {
   silencio: { label: 'Silencio', icon: Pause },

@@ -69,4 +69,10 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
 - Etapa 2 terminada: tokens en `src/styles/tokens.css`, base en `src/styles/base.css`, componentes en `src/ui/` (Button, Pad, Pill, Cue, Switch, Segmented, Slider, Panel, Toast, Wordmark provisorio y clase `.papel`). Fuentes autoalojadas con `@fontsource-variable/montserrat` y `@fontsource/atkinson-hyperlegible`. Por ahora la app muestra `src/sistema/Sistema.tsx` como muestra del sistema.
 - Vite usa `base: '/garetto-teleprompter/'` también en desarrollo y preview: la app local está en `http://localhost:5173/garetto-teleprompter/`.
 - Falta rearmar el logo como SVG: `Wordmark` es texto provisorio.
-- Próximo paso: etapa 3, modelo de datos, IndexedDB y parser de letras, con tests.
+- Etapa 3 terminada, en `src/data/`:
+  - `types.ts`: modelo (Song, Section, Line, Setlist, ajustes). Sigue el esquema SQL, en camelCase.
+  - `db.ts`: IndexedDB con `idb` (stores `songs`, `setlists` y `kv`).
+  - `repo.ts`: altas, bajas lógicas, ajustes y reglas de sincronización (`pending`, `markSynced`, `applyRemote` con última edición gana).
+  - `parser.ts`: texto plano a partes. Entiende encabezados, coros repetidos, indicaciones (x2, corte, silencio, solo) y descarta acordes.
+  - Tests con Vitest y `fake-indexeddb` (`npm test`). El workflow corre los tests antes del build.
+- Próximo paso: etapa 4, sincronización entre ventanas y pantalla de Gabi, con tests.
