@@ -120,6 +120,10 @@ export function Console() {
 
   // En pantalla angosta el buscador está en el panel del setlist: primero se abre.
   const focusSearch = useCallback(() => {
+    const input = searchRef.current
+    input?.focus()
+    // Visible: ya tiene el foco y lo que se tipee entra ahí. Si estaba en el panel cerrado, se enfoca al abrirlo.
+    if (input && document.activeElement === input) return
     setSetlistOpen(true)
     requestAnimationFrame(() => searchRef.current?.focus())
   }, [])
