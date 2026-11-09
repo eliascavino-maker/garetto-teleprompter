@@ -112,6 +112,19 @@ test('la consola maneja la pantalla de Gabi', async ({ page, context }) => {
   await expect(page.locator('.eng-h')).toContainText('Enganchado')
   await shot(page, 'consola-enganchado')
 
+  // Un clic deja el foco en un control, pero las teclas siguen siendo del show:
+  // → no cambia el selector y Espacio no apaga LOGO.
+  await page.getByRole('radio', { name: /^Línea/ }).click()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('radio', { name: /^Línea/ })).toHaveAttribute('aria-checked', 'true')
+  await page.getByRole('button', { name: /LOGO/ }).click()
+  await expect(gabi.locator('.g-over .g-espera')).toBeVisible()
+  const before = await page.locator('.ly-line.is-now').textContent()
+  await page.keyboard.press(' ')
+  await expect(gabi.locator('.g-over .g-espera')).toBeVisible()
+  await expect(page.locator('.ly-line.is-now')).not.toHaveText(before ?? '')
+  await page.keyboard.press('l')
+
   // Al cerrar la ventana, la consola se entera.
   await gabi.close()
   await expect(page.getByRole('button', { name: 'Abrir pantalla de Gabi' })).toBeVisible()

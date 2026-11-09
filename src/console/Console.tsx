@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from 'react'
-import { CircleCheck, CircleHelp, Monitor, MonitorUp, Music, Radio, RefreshCw, Square, TriangleAlert, WifiOff } from 'lucide-react'
+import { CircleCheck, CircleHelp, ListMusic, Monitor, MonitorUp, Music, Radio, RefreshCw, Square, TriangleAlert, WifiOff } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useWakeLock } from '../platform/wakeLock'
 import type { ScreenInfo } from '../show/channel'
@@ -12,6 +12,7 @@ import { Library, type LibraryStart } from '../editor/Library'
 import { DEMO_SONG } from '../show/demoSong'
 import { useShow } from '../show/useShow'
 import { Button, Pill, Toast, Wordmark } from '../ui/components'
+import { cx } from '../ui/cx'
 import type { Notice } from '../ui/labels'
 import { COUNTDOWN_S, ControlPanel } from './ControlPanel'
 import { LyricsPanel } from './LyricsPanel'
@@ -31,6 +32,8 @@ export function Console() {
   const [prefs, setPrefs] = usePrefs()
   const [guide, setGuide] = useGuidePrefs()
   const [help, setHelp] = useState(false)
+  // En pantallas angostas (tablet vertical) el setlist es un panel que se abre aparte.
+  const [setlistOpen, setSetlistOpen] = useState(false)
   const [popupBlocked, setPopupBlocked] = useState(false)
   const [library, setLibrary] = useState<{ start: LibraryStart } | null>(null)
   const [notice, setNotice] = useState<(Notice & { id: number }) | null>(null)
@@ -115,6 +118,12 @@ export function Console() {
   const closeLibrary = useCallback(() => setLibrary(null), [])
   const closeHelp = useCallback(() => setHelp(false), [])
 
+  // En pantalla angosta el buscador está en el panel del setlist: primero se abre.
+  const focusSearch = useCallback(() => {
+    setSetlistOpen(true)
+    requestAnimationFrame(() => searchRef.current?.focus())
+  }, [])
+
   /* ---------- Atajos ---------- */
 
   const messages = band?.quickMessages ?? DEFAULT_QUICK_MESSAGES
@@ -164,7 +173,7 @@ export function Console() {
             a.countdown(COUNTDOWN_S)
             break
           case '/':
-            searchRef.current?.focus()
+            focusSearch()
             break
           case 'escape':
             a.clearOverlay()
@@ -173,11 +182,17 @@ export function Console() {
             handled = false
         }
       }
-      if (handled) e.preventDefault()
+      if (handled) {
+        // Las teclas del show son de la consola: un botón o selector con foco (por un clic)
+        // no las recibe. Si no, → sobre "Parte" volvería a "Línea" y Espacio sobre LOGO lo apagaría.
+        e.preventDefault()
+        e.stopPropagation()
+      }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [show.actions, nav, messages, library, help, notice, runUndo])
+    // En captura: corre antes que los controles de la página.
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [show.actions, nav, messages, library, help, notice, runUndo, focusSearch])
 
   /* ---------- Acciones de datos ---------- */
 
@@ -230,10 +245,14 @@ export function Console() {
     <>
     <div
       className="con"
+      data-setlist-open={setlistOpen || undefined}
       inert={!!library || help}
       style={{ '--col-setlist': `${prefs.columns.setlist}px`, '--col-controls': `${prefs.columns.controls}px` } as React.CSSProperties}
     >
       <header className="con-bar">
+        <Button size="sm" variant="ghost" icon={ListMusic} className="con-bar__setlist" pressed={setlistOpen} onClick={() => setSetlistOpen(!setlistOpen)}>
+          Setlist
+        </Button>
         <Wordmark size={15} />
         <span className="con-bar__title">Gabi Garetto · Teleprompter</span>
         <Button size="sm" variant="ghost" icon={Music} onClick={() => openLibrary(song ? { songId: song.id } : null)}>
@@ -309,13 +328,17 @@ export function Console() {
               },
             })
           }}
-          onSelectEntry={(i) => goEntry(i)}
+          onSelectEntry={(i) => {
+            goEntry(i)
+            setSetlistOpen(false)
+          }}
           onLoadExample={loadExample}
           onOpenLibrary={openLibrary}
           notify={notify}
         />
         <Splitter
           label="Ancho del setlist"
+          className="con-split--setlist"
           value={prefs.columns.setlist}
           min={220}
           max={460}
@@ -333,7 +356,7 @@ export function Console() {
           label="Ancho de los controles"
           value={prefs.columns.controls}
           min={320}
-          max={560}
+          max={760}
           invert
           onChange={(v) => setPrefs((p) => ({ columns: { ...p.columns, controls: v } }))}
         />
@@ -346,6 +369,7 @@ export function Console() {
           onDevice={(d) => void store.saveDeviceSettings(d)}
         />
       </main>
+      {setlistOpen && <div className="con-drawer-backdrop" onClick={() => setSetlistOpen(false)} aria-hidden />}
 
       {!guide.dismissed && (
         <Guide
@@ -363,7 +387,7 @@ export function Console() {
           onOpenLibrary={() => openLibrary(null)}
           onLoadExample={() => void loadExample()}
           onCreateSetlist={() => void createSetlist()}
-          onFocusSearch={() => searchRef.current?.focus()}
+          onFocusSearch={focusSearch}
           onOpenScreen={() => void open()}
         />
       )}
@@ -433,7 +457,7 @@ function ScreenPill({ info }: { info: ScreenInfo | null }) {
   return (
     <span title={detail}>
       <Pill tone={problem ? 'alerta' : 'ok'} icon={Monitor}>
-        Pantalla conectada{problem && ` · ${problem}`}
+        Pantalla conectada{problem && <span className="con-pill-extra"> · {problem}</span>}
       </Pill>
     </span>
   )
@@ -483,7 +507,7 @@ function Clocks({ prefs, songDuration }: { prefs: ConsolePrefs; songDuration: nu
 
 /* ---------- Divisor entre columnas ---------- */
 
-function Splitter(props: { label: string; value: number; min: number; max: number; invert?: boolean; onChange: (v: number) => void }) {
+function Splitter(props: { label: string; value: number; min: number; max: number; invert?: boolean; className?: string; onChange: (v: number) => void }) {
   const { value, min, max, invert, onChange } = props
   const clamp = (v: number) => Math.round(Math.max(min, Math.min(max, v)))
 
@@ -504,7 +528,7 @@ function Splitter(props: { label: string; value: number; min: number; max: numbe
 
   return (
     <div
-      className="con-split"
+      className={cx('con-split', props.className)}
       role="separator"
       aria-orientation="vertical"
       aria-label={props.label}

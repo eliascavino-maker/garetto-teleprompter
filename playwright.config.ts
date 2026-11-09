@@ -10,6 +10,8 @@ export default defineConfig({
   testDir: 'e2e',
   outputDir: 'test-results',
   fullyParallel: false,
+  // En GitHub Actions la máquina es más lenta: un reintento antes de dar por rota una prueba.
+  retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {
     baseURL: DEV_URL,

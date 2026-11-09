@@ -391,7 +391,7 @@ function Preview({ analysis }: { analysis: LyricsAnalysis }) {
           {sections.length} {sections.length === 1 ? 'parte' : 'partes'} · {lines} {lines === 1 ? 'línea' : 'líneas'}
         </span>
       </header>
-      <div className="ed-prev__body">
+      <div className="ed-prev__body" tabIndex={0} aria-label="Partes detectadas">
         {chordLines.length > 0 && (
           <details className="ed-note">
             <summary>

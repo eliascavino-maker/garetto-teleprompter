@@ -675,3 +675,40 @@
     animation-duration: 3s;
   }
 }
+
+/* ---------- Pantallas angostas (tablet vertical) ---------- */
+@media (max-width: 1023px) {
+  .lib {
+    min-width: 0;
+  }
+  .lib-body {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+  /* "Cómo queda" va abajo de la letra */
+  .ed-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+  .ed-head {
+    flex-wrap: wrap;
+  }
+  .ed-title {
+    flex-basis: 100%;
+  }
+}
+
+/* Con la lista al lado, el título del tema va arriba de los botones */
+@media (max-width: 1199px) {
+  .lib-body {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+  .ed-head {
+    flex-wrap: wrap;
+  }
+  .ed-title {
+    flex-basis: 100%;
+  }
+  .ed-status {
+    margin-right: auto;
+  }
+}

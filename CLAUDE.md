@@ -113,4 +113,8 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - Estados vacíos de la letra: sin canciones, sin setlist, setlist vacío y tema sin letra.
   - Movimiento reducido: `src/platform/motion.ts` pone `data-motion="reduced"` en `<html>` si lo pide Windows o el ajuste del equipo (`DeviceSettings.reduceMotion`, viaja a la ventana de Gabi en el estado). Las reglas están en `base.css`.
   - e2e: `e2e/guia.spec.ts`. Las demás pruebas arrancan con la guía cerrada (`sinGuia` en `e2e/fixtures.ts`).
-- Próximo paso: etapa 9, revisión con Playwright y capturas en 1366×768, 1920×1080 y tablet.
+- Etapa 9 terminada:
+  - e2e/revision.spec.ts recorre la app en 1366×768, 1920×1080, tablet 1024×768 y tablet vertical 820×1180. Falla si hay errores en la consola del navegador, scroll horizontal o problemas graves de accesibilidad (axe, con la vista previa de Gabi excluida por la línea anterior casi invisible). Con SHOTS_DIR guarda capturas.
+  - Las pruebas de Playwright corren en el workflow antes del build (Chrome del runner, un reintento en CI).
+  - Arreglos de la revisión: las teclas del show se toman en captura (un selector o pad con foco no las recibe); por debajo de 1024 px la consola va en dos columnas con el setlist en un panel aparte y el editor apila "Cómo queda"; en pantallas táctiles los botones de las filas del setlist quedan visibles; columnas más anchas por defecto en monitores de 1600 px o más; contraste de líneas cantadas, números y contador de la guía.
+- Pendiente: probar con el monitor de verdad por HDMI, el logo en SVG y decidir el avance automático (speed).

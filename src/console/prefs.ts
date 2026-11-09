@@ -28,7 +28,9 @@ export const DEFAULT_PREFS: ConsolePrefs = {
   pos: null,
   showStartedAt: null,
   songStartedAt: null,
-  columns: { setlist: 280, controls: 380 },
+  // En monitores grandes, más lugar para la vista previa y los pads.
+  columns:
+    typeof window !== 'undefined' && window.innerWidth >= 1600 ? { setlist: 320, controls: 560 } : { setlist: 280, controls: 380 },
 }
 
 function read(): ConsolePrefs {
