@@ -28,3 +28,7 @@ __pycache__/
 # Supabase CLI (estado local del proyecto vinculado)
 supabase/.temp
 supabase/.branches
+
+# Playwright
+test-results/
+playwright-report/

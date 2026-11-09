@@ -1,0 +1,423 @@
+/*
+ * Pantalla de Gabi, diseñada a 1920×1080. --g es un px de 1080p: todo escala
+ * con el tamaño real de la pantalla, sea el monitor de piso o la vista previa.
+ */
+.gabi {
+  container-type: size;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--gabi-bg);
+  color: #fff;
+  font-family: var(--font-ui);
+  user-select: none;
+}
+.gabi__stage {
+  position: absolute;
+  inset: 0;
+}
+.gabi__safe {
+  --g: min(calc(100cqw / 1920), calc(100cqh / 1080));
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.gabi svg {
+  stroke-width: 2.2;
+}
+
+/* ---------- Parte y pie ---------- */
+.g-part {
+  position: absolute;
+  left: calc(var(--g) * 120);
+  top: calc(var(--g) * 72);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--g) * 18);
+  color: rgb(255 255 255 / 0.5);
+  font-weight: 700;
+  font-size: calc(var(--g) * 34);
+}
+.g-part--parte {
+  color: var(--foco);
+  font-size: calc(var(--g) * 40);
+}
+.g-page {
+  padding: calc(var(--g) * 2) calc(var(--g) * 14);
+  border: calc(var(--g) * 2) solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8em;
+}
+.g-cuetag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.1em 0.5em;
+  border-radius: 999px;
+  background: rgb(165 133 224 / 0.18);
+  color: var(--lavanda);
+  font-size: 0.8em;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.g-cuetag svg {
+  width: 1em;
+  height: 1em;
+}
+
+.g-foot {
+  position: absolute;
+  left: calc(var(--g) * 120);
+  bottom: calc(var(--g) * 64);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--g) * 20);
+  color: rgb(255 255 255 / 0.6);
+  font-weight: 700;
+  font-size: calc(var(--g) * 40);
+}
+.g-sigue {
+  color: var(--foco);
+}
+.g-prog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--g) * 10);
+  background: rgb(255 255 255 / 0.08);
+}
+.g-prog i {
+  display: block;
+  height: 100%;
+  background: var(--foco);
+  transition: width var(--dur-line) var(--ease-out);
+}
+
+/* ---------- Estilo A: por línea ---------- */
+.g-lines {
+  position: absolute;
+  left: calc(var(--g) * 120);
+  right: calc(var(--g) * 340);
+  top: 50%;
+  display: grid;
+  gap: calc(var(--g) * 26);
+  transform: translateY(-50%);
+  animation: g-line-in var(--dur-line) var(--ease-out);
+}
+.g-lines p {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.g-prev {
+  font-size: calc(var(--g) * 64);
+  color: var(--gabi-prev);
+}
+.g-now {
+  font-size: calc(var(--g) * 96);
+  color: var(--gabi-now);
+}
+.g-next {
+  font-size: calc(var(--g) * 84);
+  color: var(--gabi-next);
+}
+.g-next2 {
+  font-size: calc(var(--g) * 84);
+  color: var(--gabi-next-2);
+}
+@keyframes g-line-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(calc(-50% + var(--g) * 40));
+  }
+}
+
+.g-cue {
+  position: absolute;
+  right: calc(var(--g) * 110);
+  top: 50%;
+  display: grid;
+  gap: calc(var(--g) * 40);
+  transform: translateY(-50%);
+}
+.g-cue > div {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--g) * 14);
+}
+.g-cue svg {
+  width: calc(var(--g) * 150);
+  height: calc(var(--g) * 150);
+}
+.g-cue span {
+  font-weight: 900;
+  font-size: calc(var(--g) * 56);
+}
+
+/* ---------- Por parte ---------- */
+.g-parte {
+  --fs: 88;
+  position: absolute;
+  left: calc(var(--g) * 120);
+  right: calc(var(--g) * 120);
+  top: calc(var(--g) * 150);
+  bottom: calc(var(--g) * 150);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--g) * 12);
+  overflow: hidden;
+  animation: g-fade-in var(--dur-line) var(--ease-out);
+}
+.g-parte p {
+  color: #fff;
+  font-size: calc(var(--g) * var(--fs));
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.g-parte--marca p {
+  color: rgb(255 255 255 / 0.62);
+}
+.g-parte--marca p.g-now {
+  color: var(--foco);
+}
+.g-inline-cues {
+  display: inline-flex;
+  gap: 0.3em;
+  margin-left: 0.4em;
+  vertical-align: middle;
+  font-size: 0.5em;
+}
+@keyframes g-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Instrumental ---------- */
+.g-solo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: calc(var(--g) * 30);
+  text-align: center;
+}
+.g-solo svg {
+  width: calc(var(--g) * 260);
+  height: calc(var(--g) * 260);
+  color: var(--foco);
+  stroke-width: 1.8;
+}
+.g-solo b {
+  font-family: var(--font-lectura);
+  font-size: calc(var(--g) * 110);
+  line-height: 1;
+}
+.g-solo span {
+  max-width: calc(var(--g) * 1500);
+  color: rgb(255 255 255 / 0.6);
+  font-weight: 700;
+  font-size: calc(var(--g) * 48);
+}
+
+/* ---------- Estilo C: una línea gigante en Atkinson ---------- */
+.gabi--c .g-lines {
+  left: calc(var(--g) * 140);
+  right: calc(var(--g) * 140);
+  gap: calc(var(--g) * 40);
+  text-align: center;
+}
+.gabi--c .g-lines p,
+.gabi--c .g-parte p {
+  font-family: var(--font-lectura);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.gabi--c .g-prev,
+.gabi--c .g-next2 {
+  display: none;
+}
+.gabi--c .g-now {
+  font-size: calc(var(--g) * 124);
+  line-height: 1.05;
+  color: #fff;
+}
+.gabi--c .g-next {
+  font-size: calc(var(--g) * 72);
+  color: rgb(255 255 255 / 0.5);
+}
+.gabi--c .g-parte {
+  align-items: center;
+  text-align: center;
+}
+.gabi--c .g-part {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.gabi--c .g-foot {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--g) * 56);
+  white-space: nowrap;
+}
+.gabi--c .g-cue {
+  right: auto;
+  left: 50%;
+  top: auto;
+  bottom: calc(var(--g) * 150);
+  display: flex;
+  transform: translateX(-50%);
+}
+.gabi--c .g-cue > div {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--g) * 20);
+}
+.gabi--c .g-cue svg {
+  width: calc(var(--g) * 80);
+  height: calc(var(--g) * 80);
+}
+.gabi--c .g-cue span {
+  font-size: calc(var(--g) * 44);
+}
+
+/* ---------- Espera y LOGO ---------- */
+.g-espera {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: calc(var(--g) * 40);
+}
+.g-espera__logo {
+  animation: g-respira 7s ease-in-out infinite;
+}
+.g-espera__logo .wordmark {
+  font-size: calc(var(--g) * 190) !important;
+}
+.g-espera__frase {
+  padding-left: 0.32em;
+  color: var(--lavanda);
+  font-weight: 800;
+  font-size: calc(var(--g) * 44);
+  letter-spacing: 0.32em;
+}
+.g-espera__wait {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--g) * 48);
+  text-align: center;
+  color: rgb(207 194 222 / 0.6);
+  font-weight: 600;
+  font-size: calc(var(--g) * 28);
+}
+@keyframes g-respira {
+  50% {
+    transform: scale(1.018);
+  }
+}
+
+/* ---------- Carteles ---------- */
+.g-over,
+.g-negro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+.g-negro {
+  background: #000;
+}
+
+.g-cartel {
+  position: absolute;
+  inset: calc(var(--g) * 150) calc(var(--g) * 120);
+  z-index: 10;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: calc(var(--g) * 28);
+  border-radius: calc(var(--g) * 28);
+  text-align: center;
+  overflow: hidden;
+  animation: g-cartel-in var(--dur-in) var(--ease-out);
+}
+.g-cartel svg {
+  width: calc(var(--g) * 96);
+  height: calc(var(--g) * 96);
+  color: var(--lavanda);
+}
+.g-cartel b {
+  max-width: calc(var(--g) * 1500);
+  font-size: calc(var(--g) * 150);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.g-cartel__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: calc(var(--g) * 14);
+  background: var(--lavanda);
+}
+@keyframes g-cartel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.g-cuenta {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  background: #000;
+}
+.g-cuenta b {
+  color: #fff;
+  font-size: calc(var(--g) * 560);
+  font-weight: 900;
+  line-height: 0.85;
+}
+.g-cuenta span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--g) * 50);
+  text-align: center;
+  color: var(--lavanda);
+  font-weight: 800;
+  font-size: calc(var(--g) * 48);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-espera__logo {
+    animation: none;
+  }
+  @keyframes g-line-in {
+    from {
+      opacity: 0.4;
+    }
+  }
+  @keyframes g-cartel-in {
+    from {
+      opacity: 0;
+    }
+  }
+}

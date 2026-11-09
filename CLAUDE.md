@@ -75,4 +75,12 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - `repo.ts`: altas, bajas lógicas, ajustes y reglas de sincronización (`pending`, `markSynced`, `applyRemote` con última edición gana).
   - `parser.ts`: texto plano a partes. Entiende encabezados, coros repetidos, indicaciones (x2, corte, silencio, solo) y descarta acordes.
   - Tests con Vitest y `fake-indexeddb` (`npm test`). El workflow corre los tests antes del build.
-- Próximo paso: etapa 4, sincronización entre ventanas y pantalla de Gabi, con tests.
+- Etapa 4 terminada:
+  - `src/show/cursor.ts`: avance por línea o por parte (pasos, Shift = parte, división en pantallas de hasta 8 líneas).
+  - `src/show/view.ts`: la consola arma la vista (`ShowState`) y la ventana de Gabi solo la dibuja.
+  - `src/show/channel.ts`: `ConsoleLink` y `GabiLink` sobre BroadcastChannel. Siempre se manda el estado completo, con saludo, latido y aviso de cierre.
+  - `src/show/useShow.ts`: estado del show en la consola, con atajos (→, PageDown y Espacio avanzan; Shift salta de parte; M, B, L, C, F1–F5, Esc).
+  - `src/gabi/`: pantalla de Gabi (estilos A y C, parte, instrumental, NEGRO, LOGO, mensaje, cuenta, rotación y espejo) y la ventana en `#/gabi`.
+  - `src/show/Ensayo.tsx`: consola de ensayo provisoria con una letra inventada (`demoSong.ts`). La reemplaza la consola de la etapa 5.
+  - Prueba con las dos ventanas: `npm run e2e` (Playwright con el Chrome instalado, en `e2e/`). Todavía no corre en el workflow.
+- Próximo paso: etapa 5, la consola.
