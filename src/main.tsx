@@ -8,6 +8,10 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './ui/ui.css'
 import App from './App.tsx'
+import { store } from './data/store'
+
+// La ventana de Gabi no usa la base: solo escucha a la consola.
+if (window.location.hash !== '#/gabi') void store.init()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

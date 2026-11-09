@@ -8,77 +8,108 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}.png` })
 }
 
+/** Agrega directo en IndexedDB una copia del tema de ejemplo como segundo tema del setlist. */
+async function seedSecondSong(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const req = indexedDB.open('garetto-teleprompter')
+        req.onerror = () => reject(req.error)
+        req.onsuccess = () => {
+          const db = req.result
+          const tx = db.transaction(['songs', 'setlists'], 'readwrite')
+          const songs = tx.objectStore('songs')
+          const setlists = tx.objectStore('setlists')
+          songs.getAll().onsuccess = (e) => {
+            const [first] = (e.target as IDBRequest).result
+            const second = { ...first, id: 'segundo', title: 'Segundo tema' }
+            songs.put(second)
+            setlists.getAll().onsuccess = (ev) => {
+              const [sl] = (ev.target as IDBRequest).result
+              setlists.put({ ...sl, items: [...sl.items, { type: 'song', songId: 'segundo' }] })
+            }
+          }
+          tx.oncomplete = () => resolve()
+          tx.onerror = () => reject(tx.error)
+        }
+      }),
+  )
+}
+
 test('la consola maneja la pantalla de Gabi', async ({ page, context }) => {
   await page.goto('./')
-  await expect(page.getByText('Pantalla cerrada')).toBeVisible()
+
+  // Arranca vacía: carga el ejemplo.
+  await expect(page.getByText('Todavía no hay ningún setlist.')).toBeVisible()
+  await page.getByRole('button', { name: 'Cargar un ejemplo para probar' }).click()
+  await expect(page.getByRole('heading', { name: 'Mandale baile (ejemplo)' })).toBeVisible()
 
   // Abrir la ventana de Gabi.
   const [gabi] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Abrir pantalla de Gabi' }).click()])
   await gabi.setViewportSize({ width: 1920, height: 1080 })
   await expect(page.getByText('Pantalla conectada')).toBeVisible()
-
-  // Arranca en la intro instrumental.
   await expect(gabi.locator('.g-solo b')).toHaveText('Intro')
-  await shot(gabi, 'gabi-1-intro')
 
   // → avanza una línea.
   await page.keyboard.press('ArrowRight')
   await expect(gabi.locator('.g-now')).toHaveText('Llegamos de lejos con ganas de fiesta')
-  await expect(gabi.locator('.g-next').first()).toHaveText('la noche recién empieza en Córdoba')
-  await shot(gabi, 'gabi-2-linea')
 
-  // Shift → salta a la parte siguiente (el coro), con su indicación ×2.
+  // Shift → salta al coro, con su ×2.
   await page.keyboard.press('Shift+ArrowRight')
   await expect(gabi.locator('.g-part')).toContainText('Coro')
-  await expect(gabi.locator('.g-now')).toHaveText('Mandale baile, mandale baile')
   await expect(gabi.locator('.g-cue')).toContainText('×2')
-  await shot(gabi, 'gabi-3-coro')
 
-  // M pasa a modo parte: el coro entero en pantalla, con la línea marcada.
+  // M: modo parte con la línea marcada.
   await page.keyboard.press('m')
   await expect(gabi.locator('.g-parte p')).toHaveCount(4)
-  await expect(gabi.locator('.g-parte p.g-now')).toContainText('Mandale baile, mandale baile')
-  await shot(gabi, 'gabi-4-parte')
+  await shot(page, 'consola')
 
-  // El final tiene 10 líneas: se divide en dos pantallas.
-  await page.getByRole('switch', { name: 'Marcar la línea' }).click()
-  for (let i = 0; i < 4; i++) await page.keyboard.press('Shift+ArrowRight')
-  await expect(gabi.locator('.g-part')).toContainText('Final')
-  await expect(gabi.locator('.g-page')).toHaveText('1/2')
+  // Recargar la consola en pleno show: vuelve al coro y la pantalla sigue conectada.
+  await seedSecondSong(page)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Mandale baile (ejemplo)' })).toBeVisible()
+  await expect(gabi.locator('.g-part')).toContainText('Coro')
+  await expect(page.getByText('Pantalla conectada')).toBeVisible()
+  await expect(page.getByText('2 temas')).toBeVisible()
+
+  // Al final del tema, → pasa al siguiente.
+  await page.getByRole('button', { name: /nos vemos en la próxima/ }).click()
+  await expect(gabi.locator('.g-now')).toHaveText('nos vemos en la próxima')
+  await expect(gabi.locator('.g-foot')).toContainText('Segundo tema')
   await page.keyboard.press('ArrowRight')
-  await expect(gabi.locator('.g-page')).toHaveText('2/2')
-  await shot(gabi, 'gabi-5-final-2de2')
+  await expect(page.getByRole('heading', { name: 'Segundo tema' })).toBeVisible()
+  await expect(gabi.locator('.g-solo b')).toHaveText('Intro')
 
-  // Estilo C.
-  await page.getByRole('radio', { name: 'Estilo C' }).click()
-  await page.getByRole('radio', { name: 'Línea' }).click()
-  await expect(gabi.locator('.gabi--c .g-now')).toBeVisible()
-  await shot(gabi, 'gabi-6-estilo-c')
+  // ← desde el comienzo vuelve al final del anterior.
+  await page.keyboard.press('ArrowLeft')
+  await expect(page.getByRole('heading', { name: 'Mandale baile (ejemplo)' })).toBeVisible()
+  await expect(gabi.locator('.g-now')).toHaveText('nos vemos en la próxima')
 
-  // Mensaje rápido (F2) y NEGRO (B).
+  // Mensaje rápido (F2), mensaje libre (F6), NEGRO y LOGO.
   await page.keyboard.press('F2')
   await expect(gabi.locator('.g-cartel')).toContainText('Más lento')
-  await shot(gabi, 'gabi-7-mensaje')
   await page.keyboard.press('Escape')
-  await expect(gabi.locator('.g-cartel')).toHaveCount(0)
+  await page.keyboard.press('F6')
+  await page.keyboard.type('Saludá a Alberdi')
+  await page.keyboard.press('Enter')
+  await expect(gabi.locator('.g-cartel')).toContainText('Saludá a Alberdi')
+  await shot(gabi, 'gabi-mensaje-libre')
+  await page.keyboard.press('Escape')
   await page.keyboard.press('b')
   await expect(gabi.locator('.g-negro')).toBeVisible()
   await page.keyboard.press('b')
-  await expect(gabi.locator('.g-negro')).toHaveCount(0)
-
-  // LOGO.
   await page.keyboard.press('l')
   await expect(gabi.locator('.g-over .g-espera')).toBeVisible()
-  await shot(gabi, 'gabi-8-logo')
   await page.keyboard.press('l')
 
-  await shot(page, 'consola')
-
-  // Si la ventana se recarga, recupera el estado sola.
-  await gabi.reload()
-  await expect(gabi.locator('.gabi--c .g-now')).toBeVisible()
+  // Enganchar los dos temas: aparece la costura.
+  await page.locator('.sl-row').first().hover()
+  await page.getByRole('button', { name: 'Enganchar con el siguiente' }).first().click()
+  await expect(page.locator('.eng .sl-row')).toHaveCount(2)
+  await expect(page.locator('.eng-h')).toContainText('Enganchado')
+  await shot(page, 'consola-enganchado')
 
   // Al cerrar la ventana, la consola se entera.
   await gabi.close()
-  await expect(page.getByText('Pantalla cerrada')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Abrir pantalla de Gabi' })).toBeVisible()
 })

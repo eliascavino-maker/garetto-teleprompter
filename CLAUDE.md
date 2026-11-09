@@ -81,6 +81,14 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - `src/show/channel.ts`: `ConsoleLink` y `GabiLink` sobre BroadcastChannel. Siempre se manda el estado completo, con saludo, latido y aviso de cierre.
   - `src/show/useShow.ts`: estado del show en la consola, con atajos (→, PageDown y Espacio avanzan; Shift salta de parte; M, B, L, C, F1–F5, Esc).
   - `src/gabi/`: pantalla de Gabi (estilos A y C, parte, instrumental, NEGRO, LOGO, mensaje, cuenta, rotación y espejo) y la ventana en `#/gabi`.
-  - `src/show/Ensayo.tsx`: consola de ensayo provisoria con una letra inventada (`demoSong.ts`). La reemplaza la consola de la etapa 5.
   - Prueba con las dos ventanas: `npm run e2e` (Playwright con el Chrome instalado, en `e2e/`). Todavía no corre en el workflow.
-- Próximo paso: etapa 5, la consola.
+- Etapa 5 terminada, en `src/console/`:
+  - `Console.tsx`: barra (relojes de show y tema, EN VIVO, pantalla), tres columnas con divisores que se arrastran, atajos y paso entre temas (→ al final pasa al siguiente; ← al comienzo vuelve al final del anterior).
+  - `SetlistPanel.tsx`: elegir, crear, renombrar y borrar setlists; buscar y agregar temas (`/`); arrastrar con `@dnd-kit`; enganchar y desenganchar con la costura violeta.
+  - `LyricsPanel.tsx` y `ControlPanel.tsx`: letra con la línea actual y controles (vista previa, avance, modo, estilo, montaje, pads F1–F5, mensaje libre F6, cuenta, LOGO, NEGRO).
+  - `prefs.ts`: setlist abierto, posición, relojes y columnas en localStorage, para retomar después de recargar.
+  - `src/data/store.ts`: almacén en memoria sobre IndexedDB para React (`useData`), con aviso entre pestañas.
+  - `src/data/setlist.ts`: operaciones puras del setlist, con tests.
+  - Sin editor todavía: el estado vacío ofrece "Cargar un ejemplo para probar" (`src/show/demoSong.ts`).
+- Pendiente de decidir: la velocidad de la canción (`speed`) y el avance automático que muestra la propuesta. Hoy el avance es solo manual.
+- Próximo paso: etapa 6, editor e importación (.txt, .docx y PDF), con deshacer y backup.

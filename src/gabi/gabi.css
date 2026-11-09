@@ -461,3 +461,15 @@
     }
   }
 }
+
+/* Ventana de Gabi: sin cursor ni márgenes */
+.is-gabi,
+.is-gabi body {
+  overflow: hidden;
+  background: #000;
+}
+.gabi-window {
+  position: fixed;
+  inset: 0;
+  cursor: none;
+}

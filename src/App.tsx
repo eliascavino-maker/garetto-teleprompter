@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Console } from './console/Console'
 import { GabiWindow } from './gabi/GabiWindow'
-import { Ensayo } from './show/Ensayo'
 import { Sistema } from './sistema/Sistema'
 
 function useHash() {
@@ -18,5 +18,5 @@ export default function App() {
   const hash = useHash()
   if (hash === '#/gabi') return <GabiWindow />
   if (hash === '#/sistema') return <Sistema />
-  return <Ensayo />
+  return <Console />
 }
