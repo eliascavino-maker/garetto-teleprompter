@@ -132,6 +132,8 @@ test('editor: escribir, marcar, deshacer, importar y backup', async ({ page }) =
   await page.keyboard.press('Escape')
   await expect(lib).toBeHidden()
   await page.getByRole('button', { name: 'Nuevo setlist' }).first().click()
+  // El buscador aparece cuando el setlist ya existe.
+  await expect(page.getByRole('searchbox', { name: 'Buscar tema para agregar al setlist' })).toBeVisible()
   await page.keyboard.press('/')
   await page.keyboard.type('fuego')
   await page.keyboard.press('Enter')

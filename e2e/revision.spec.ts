@@ -28,6 +28,10 @@ async function noHorizontalScroll(page: Page) {
  * afuera: la línea anterior casi invisible es una decisión de diseño.
  */
 async function axe(page: Page, where: string) {
+  // Que terminen los fundidos de entrada: a media animación el contraste da mal.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity),
+  )
   const { violations } = await new AxeBuilder({ page }).exclude('.con-preview').analyze()
   const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
   expect(
