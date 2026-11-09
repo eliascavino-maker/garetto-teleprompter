@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { ConsoleLink, GabiLink } from './channel'
+import { ConsoleLink, GabiLink, type ScreenInfo } from './channel'
 import type { ShowState } from './view'
 
 // Node trae BroadcastChannel: estos tests usan el canal real.
@@ -77,6 +77,20 @@ describe('canal consola ↔ Gabi', () => {
     g.close()
     await until(() => !consola.connected)
     expect(status).toEqual([true, false])
+  })
+
+  it('la consola sabe cómo está la pantalla (pantalla completa, tamaño, Wake Lock)', async () => {
+    const { consola, gabi } = pair('t5')
+    const infos: Array<ScreenInfo | null> = []
+    consola.onInfo((i) => infos.push(i))
+    const g = gabi()
+    g.setInfo({ fullscreen: false, width: 960, height: 540, wakeLock: true })
+    await until(() => consola.info?.width === 960)
+    g.setInfo({ fullscreen: true, width: 1920, height: 1080, wakeLock: true })
+    await until(() => consola.info?.fullscreen === true)
+    g.close()
+    await until(() => consola.info === null)
+    expect(infos.map((i) => i?.width ?? null)).toEqual([960, 1920, null])
   })
 
   it('si la pantalla deja de latir, se da por desconectada', async () => {

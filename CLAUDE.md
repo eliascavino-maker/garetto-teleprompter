@@ -100,4 +100,11 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - Parser: saca acordes entre corchetes (`[Am]Hola`), informa los renglones de acordes descartados y conserva el tipo en `[Coro final]`.
   - e2e: `e2e/editor.spec.ts`, con archivos de prueba armados en `e2e/fixtures.ts`.
 - Pendiente de decidir: la velocidad de la canción (`speed`) y el avance automático que muestra la propuesta. Hoy el avance es solo manual.
-- Próximo paso: etapa 7, PWA offline (precachear también los chunks de mammoth, pdf.js y su worker), Wake Lock y Window Management.
+- Etapa 7 terminada:
+  - PWA con `vite-plugin-pwa` (`registerType: 'prompt'`): precachea todo (unos 2,6 MB, con mammoth, pdf.js y su worker). Nunca se actualiza sola: la consola muestra "Actualizar" y el operador decide. Avisa "la app ya funciona sin internet" y muestra "Sin internet" en la barra. Íconos en `public/` (la TT del favicon).
+  - `src/platform/wakeLock.ts`: `useWakeLock`. Lo usan la ventana de Gabi (siempre) y la consola (con la pantalla conectada o EN VIVO).
+  - `src/platform/screens.ts`: Window Management. `openGabiWindow` abre la ventana antes de esperar nada (para que Chrome no la bloquee) y después la mueve y estira al monitor externo. Si no hay permiso o hay un solo monitor, avisa qué hacer.
+  - La ventana de Gabi le manda a la consola `ScreenInfo` (pantalla completa, tamaño, Wake Lock) en el saludo y el latido. La consola lo muestra en la pastilla ("falta pantalla completa"). Un clic en la ventana de Gabi la pone en pantalla completa; mientras falte, muestra un aviso que se esconde si no se mueve el mouse.
+  - e2e: `e2e/offline.spec.ts` corre contra `vite preview` (puerto 5198, segundo `webServer` de Playwright) y prueba consola, ventana de Gabi e importación sin internet.
+  - Falta probarlo con un monitor de verdad por HDMI (permiso de Window Management y pantalla completa en el segundo monitor).
+- Próximo paso: etapa 8, onboarding, estados vacíos, ayuda con "?" y movimiento reducido.

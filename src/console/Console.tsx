@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { CircleCheck, Monitor, Music, Radio, Square, TriangleAlert } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from 'react'
+import { CircleCheck, Monitor, MonitorUp, Music, Radio, RefreshCw, Square, TriangleAlert, WifiOff } from 'lucide-react'
+import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useWakeLock } from '../platform/wakeLock'
+import type { ScreenInfo } from '../show/channel'
 import { DEFAULT_QUICK_MESSAGES } from '../data/repo'
 import * as sl from '../data/setlist'
 import { store, useData } from '../data/store'
@@ -180,7 +183,28 @@ export function Console() {
     setPrefs({ setlistId: target.id })
   }
 
-  const open = () => setPopupBlocked(!openGabiWindow())
+  /** Abre la pantalla de Gabi y la manda al monitor de piso. Avisa qué pasó. */
+  const open = async () => {
+    const r = await openGabiWindow({ place: !show.screen?.fullscreen })
+    setPopupBlocked(r?.blocked === true)
+    if (!r || r.blocked) return
+    if (r.kind === 'external')
+      notify({ message: `Pantalla de Gabi en ${r.label ? `“${r.label}”` : 'el otro monitor'}. Hacé un clic en ella para ponerla en pantalla completa.` })
+    else if (r.kind === 'single')
+      notify({ tone: 'alerta', message: 'No encuentro el monitor de Gabi. Conectalo y elegí “Extender” (Windows + P).' })
+    else notify({ tone: 'alerta', message: 'Arrastrá la ventana de Gabi al monitor y hacé un clic en ella (o F11) para pantalla completa.' })
+  }
+
+  // Que no se apague la pantalla de la notebook durante el show.
+  useWakeLock(show.connected || prefs.showStartedAt !== null)
+
+  // App sin internet: avisa cuando quedó lista y cuando hay una versión nueva.
+  // Nunca se actualiza sola: el operador elige cuándo.
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({ onOfflineReady: () => notify({ message: 'Listo: la app ya funciona sin internet.' }) })
+  const online = useOnline()
 
   /* ---------- Render ---------- */
 
@@ -213,17 +237,38 @@ export function Console() {
               Empezar show
             </Button>
           )}
+          {!online && (
+            <span title="No pasa nada: todo funciona sin internet.">
+              <Pill icon={WifiOff}>Sin internet</Pill>
+            </span>
+          )}
+          {needRefresh && (
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={RefreshCw}
+              onClick={() => void updateServiceWorker(true)}
+              title="Hay una versión nueva. Se recarga la consola; la pantalla de Gabi sigue igual."
+            >
+              Actualizar
+            </Button>
+          )}
           {show.connected ? (
-            <Pill tone="ok" icon={Monitor}>
-              Pantalla conectada
-            </Pill>
+            <ScreenPill info={show.screen} />
           ) : (
-            <Button size="sm" variant="primary" icon={Monitor} onClick={open}>
+            <Button size="sm" variant="primary" icon={Monitor} onClick={() => void open()}>
               Abrir pantalla de Gabi
             </Button>
           )}
           {show.connected && (
-            <Button size="sm" variant="ghost" icon={Monitor} onClick={open} aria-label="Traer la pantalla de Gabi al frente" title="Traer la pantalla al frente" />
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={show.screen?.fullscreen ? Monitor : MonitorUp}
+              onClick={() => void open()}
+              aria-label={show.screen?.fullscreen ? 'Traer la pantalla de Gabi al frente' : 'Mandar la pantalla de Gabi al monitor'}
+              title={show.screen?.fullscreen ? 'Traer la pantalla al frente' : 'Mandar la pantalla al monitor'}
+            />
           )}
         </div>
       </header>
@@ -318,6 +363,42 @@ export function Console() {
       </div>
     )}
     </>
+  )
+}
+
+/* ---------- Estado de la pantalla de Gabi ---------- */
+
+function ScreenPill({ info }: { info: ScreenInfo | null }) {
+  // Lo que falta, en orden de importancia.
+  const problem = !info ? null : !info.fullscreen ? 'falta pantalla completa' : info.wakeLock === false ? 'se puede apagar' : null
+  const detail = !info
+    ? undefined
+    : !info.fullscreen
+      ? 'Hacé un clic en la pantalla de Gabi (o F11 en esa ventana).'
+      : info.wakeLock === false
+        ? 'El navegador no dejó que la pantalla quede siempre encendida: revisá el ahorro de energía.'
+        : `${info.width}×${info.height}, siempre encendida.`
+  return (
+    <span title={detail}>
+      <Pill tone={problem ? 'alerta' : 'ok'} icon={Monitor}>
+        Pantalla conectada{problem && ` · ${problem}`}
+      </Pill>
+    </span>
+  )
+}
+
+/** Si hay conexión. Solo informa: la app no la necesita. */
+function useOnline() {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('online', cb)
+      window.addEventListener('offline', cb)
+      return () => {
+        window.removeEventListener('online', cb)
+        window.removeEventListener('offline', cb)
+      }
+    },
+    () => navigator.onLine,
   )
 }
 

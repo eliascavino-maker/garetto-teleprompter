@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AdvanceMode, DeviceSettings, Song } from '../data/types'
-import { ConsoleLink } from './channel'
+import { ConsoleLink, type ScreenInfo } from './channel'
 import * as cursor from './cursor'
 import { buildLyricView, type GabiStyle, type Overlay, type ShowState } from './view'
 
@@ -30,6 +30,7 @@ export function useShow(song: Song | null, opts: UseShowOptions) {
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const { style, device } = opts
   const [connected, setConnected] = useState(false)
+  const [screen, setScreen] = useState<ScreenInfo | null>(null)
 
   const sections = useMemo(() => song?.sections ?? [], [song])
   const steps = useMemo(() => cursor.buildSteps(sections, { mode, marcar }), [sections, mode, marcar])
@@ -59,8 +60,10 @@ export function useShow(song: Song | null, opts: UseShowOptions) {
     const l = new ConsoleLink()
     link.current = l
     const off = l.onStatus(setConnected)
+    const offInfo = l.onInfo(setScreen)
     return () => {
       off()
+      offInfo()
       l.close()
       link.current = null
     }
@@ -118,6 +121,8 @@ export function useShow(song: Song | null, opts: UseShowOptions) {
     device,
     overlay,
     connected,
+    /** Cómo está la ventana de Gabi: pantalla completa, tamaño, Wake Lock. */
+    screen,
     actions: {
       next: () => go(cursor.next(steps, index)),
       prev: () => go(cursor.prev(steps, index)),

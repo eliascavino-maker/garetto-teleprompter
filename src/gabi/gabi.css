@@ -473,3 +473,46 @@
   inset: 0;
   cursor: none;
 }
+.gabi-window[data-hint] {
+  cursor: pointer;
+}
+
+/* Aviso para el operador mientras falta la pantalla completa */
+.gabi-hint {
+  position: fixed;
+  left: 50%;
+  top: 24px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 20px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--ink-4);
+  box-shadow: var(--shadow-float);
+  color: var(--chalk);
+  font-family: var(--font-ui);
+  transform: translateX(-50%);
+  animation: toast-in var(--dur-in) var(--ease-out);
+}
+.gabi-hint > svg {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  color: var(--foco);
+}
+.gabi-hint div {
+  display: grid;
+  gap: 2px;
+}
+.gabi-hint b {
+  font-weight: 800;
+  font-size: 16px;
+}
+.gabi-hint span {
+  color: var(--chalk-2);
+  font-weight: 600;
+  font-size: 13px;
+}
