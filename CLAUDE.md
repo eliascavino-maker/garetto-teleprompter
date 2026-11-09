@@ -90,5 +90,14 @@ Cada etapa lleva un commit o más, y el deploy tiene que quedar en verde.
   - `src/data/store.ts`: almacén en memoria sobre IndexedDB para React (`useData`), con aviso entre pestañas.
   - `src/data/setlist.ts`: operaciones puras del setlist, con tests.
   - Sin editor todavía: el estado vacío ofrece "Cargar un ejemplo para probar" (`src/show/demoSong.ts`).
+- Etapa 6 terminada:
+  - `src/editor/Library.tsx`: pantalla "Canciones" que se abre encima de la consola (la consola queda `inert` y Gabi sigue conectada). Lista con búsqueda, nuevo tema, importar (botón o arrastrar archivos), bajar y restaurar backup.
+  - `src/editor/Editor.tsx`: la letra se edita como texto (`[Coro x2]`, `(corte)`) con la vista "Cómo queda" al lado. Botones para marcar partes e indicaciones en el renglón del cursor, autoguardado, Ctrl+Z / Ctrl+Y propios (`history.ts`) y Ctrl+S. Ofrece usar el primer renglón como título.
+  - `src/editor/draft.ts`: borrador, duración "4:10" y operaciones de texto, con tests.
+  - `src/import/`: `.txt` (UTF-8 o Windows-1252), `.docx` con mammoth y PDF con pdf.js, los dos cargados solo al importar. Lo puro va en `text.ts`, con tests.
+  - `src/data/backup.ts`: armar y validar el .json. Restaurar reemplaza las filas del backup y se puede deshacer (`Repo.putRows` / `revertRows`).
+  - Avisos con "Deshacer" (y Ctrl+Z) en la consola: sacar un tema del setlist, borrar setlist o tema, importar y restaurar.
+  - Parser: saca acordes entre corchetes (`[Am]Hola`), informa los renglones de acordes descartados y conserva el tipo en `[Coro final]`.
+  - e2e: `e2e/editor.spec.ts`, con archivos de prueba armados en `e2e/fixtures.ts`.
 - Pendiente de decidir: la velocidad de la canción (`speed`) y el avance automático que muestra la propuesta. Hoy el avance es solo manual.
-- Próximo paso: etapa 6, editor e importación (.txt, .docx y PDF), con deshacer y backup.
+- Próximo paso: etapa 7, PWA offline (precachear también los chunks de mammoth, pdf.js y su worker), Wake Lock y Window Management.

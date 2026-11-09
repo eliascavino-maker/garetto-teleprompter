@@ -10,11 +10,13 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Check, GripVertical, Link2, ListMusic, Pencil, Plus, Search, Trash2, Unlink, X } from 'lucide-react'
+import { Check, GripVertical, Link2, ListMusic, Music, Pencil, Plus, Search, Trash2, Unlink, X } from 'lucide-react'
 import * as sl from '../data/setlist'
 import type { Setlist, SetlistItem, Song } from '../data/types'
 import { Button, Kbd } from '../ui/components'
 import { cx } from '../ui/cx'
+import { fold, type Notify } from '../ui/labels'
+import type { LibraryStart } from '../editor/Library'
 
 interface Props {
   setlists: Setlist[]
@@ -26,17 +28,12 @@ interface Props {
   onPickSetlist: (id: string) => void
   onCreateSetlist: () => void
   onSaveSetlist: (s: Setlist) => void
-  onDeleteSetlist: (id: string) => void
+  onDeleteSetlist: (s: Setlist) => void
   onSelectEntry: (entry: number) => void
   onLoadExample: () => void
+  onOpenLibrary: (start: LibraryStart) => void
+  notify: Notify
 }
-
-/** Sin tildes y en minúscula, para buscar "corazon" y encontrar "Corazón". */
-const fold = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
 
 export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
   const [query, setQuery] = useState('')
@@ -55,6 +52,15 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
   }, [query, songs])
 
   const save = (next: SetlistItem[]) => setlist && p.onSaveSetlist({ ...setlist, items: next })
+
+  /** Sacar un tema del setlist, con deshacer. */
+  const removeAt = (entry: number) => {
+    if (!setlist) return
+    const before = setlist
+    save(sl.removeEntry(items, entry))
+    const title = byId.get(list[entry]?.songId ?? '')?.title
+    p.notify({ message: title ? `Sacaste “${title}” del setlist.` : 'Sacaste un tema del setlist.', undo: () => p.onSaveSetlist(before) })
+  }
 
   const add = (songId: string) => {
     if (!setlist) return
@@ -122,7 +128,7 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
           }}
           onDelete={() => {
             if (!confirmDelete) return setConfirmDelete(true)
-            p.onDeleteSetlist(setlist.id)
+            p.onDeleteSetlist(setlist)
             setConfirmDelete(false)
             setEditing(false)
           }}
@@ -140,9 +146,14 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
             Nuevo setlist
           </Button>
           {songs.length === 0 && (
-            <Button variant="ghost" onClick={p.onLoadExample}>
-              Cargar un ejemplo para probar
-            </Button>
+            <>
+              <Button icon={Music} onClick={() => p.onOpenLibrary(null)}>
+                Cargar canciones
+              </Button>
+              <Button variant="ghost" onClick={p.onLoadExample}>
+                Cargar un ejemplo para probar
+              </Button>
+            </>
           )}
         </Empty>
       ) : (
@@ -170,7 +181,14 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
           <div className="panel__body">
             {query ? (
               <ul className="con-results" aria-label="Resultados">
-                {results.length === 0 && <li className="con-muted">No hay temas con “{query}”.</li>}
+                {results.length === 0 && (
+                  <li className="con-results__none">
+                    <span className="con-muted">No hay temas con “{query}”.</span>
+                    <Button size="sm" icon={Plus} onClick={() => p.onOpenLibrary({ newTitle: query.trim() })}>
+                      Crear “{query.trim()}”
+                    </Button>
+                  </li>
+                )}
                 {results.map((s, i) => (
                   <li key={s.id}>
                     <button type="button" className="con-result" onClick={() => add(s.id)}>
@@ -189,9 +207,14 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
                   {songs.length ? 'Buscá un tema arriba para agregarlo.' : 'Todavía no hay canciones cargadas.'}
                 </p>
                 {songs.length === 0 && (
-                  <Button variant="ghost" onClick={p.onLoadExample}>
-                    Cargar un ejemplo para probar
-                  </Button>
+                  <>
+                    <Button icon={Music} onClick={() => p.onOpenLibrary(null)}>
+                      Cargar canciones
+                    </Button>
+                    <Button variant="ghost" onClick={p.onLoadExample}>
+                      Cargar un ejemplo para probar
+                    </Button>
+                  </>
                 )}
               </Empty>
             ) : (
@@ -208,7 +231,7 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
                               current={p.current}
                               handle={handle}
                               onSelect={p.onSelectEntry}
-                              onRemove={() => save(sl.removeEntry(items, firstEntry[i]))}
+                              onRemove={() => removeAt(firstEntry[i])}
                               onLink={i < items.length - 1 ? () => save(sl.linkWithNext(items, i)) : undefined}
                             />
                           ) : (
@@ -235,7 +258,7 @@ export function SetlistPanel({ searchRef, setlist, songs, ...p }: Props) {
                                   song={byId.get(songId)}
                                   current={p.current}
                                   onSelect={p.onSelectEntry}
-                                  onRemove={() => save(sl.removeEntry(items, firstEntry[i] + k))}
+                                  onRemove={() => removeAt(firstEntry[i] + k)}
                                 />
                               ))}
                             </div>

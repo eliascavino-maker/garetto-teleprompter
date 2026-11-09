@@ -176,6 +176,12 @@
   padding: 0 8px 12px;
   list-style: none;
 }
+.con-results__none {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 6px 10px;
+}
 .con-result {
   display: flex;
   align-items: center;
@@ -484,6 +490,14 @@
   padding: 16px 24px 10px;
   border-bottom: 1px solid var(--line);
 }
+.ly-head__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ly-head__row .btn {
+  margin-left: auto;
+}
 .ly-head h2 {
   font-size: 24px;
   font-weight: 800;
@@ -664,6 +678,11 @@
   bottom: var(--s-5);
   z-index: 20;
   transform: translateX(-50%);
+}
+/* Los avisos con deshacer van por encima de Canciones */
+.con-toast--top {
+  z-index: 40;
+  max-width: min(720px, calc(100vw - 32px));
 }
 
 

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { Monitor, Radio, Square, TriangleAlert } from 'lucide-react'
+import { CircleCheck, Monitor, Music, Radio, Square, TriangleAlert } from 'lucide-react'
 import { DEFAULT_QUICK_MESSAGES } from '../data/repo'
 import * as sl from '../data/setlist'
 import { store, useData } from '../data/store'
 import { openGabiWindow } from '../gabi/openGabi'
 import { pageOfLine } from '../show/cursor'
+import { Library, type LibraryStart } from '../editor/Library'
 import { DEMO_SONG } from '../show/demoSong'
 import { useShow } from '../show/useShow'
 import { Button, Pill, Toast, Wordmark } from '../ui/components'
+import type { Notice } from '../ui/labels'
 import { COUNTDOWN_S, ControlPanel } from './ControlPanel'
 import { LyricsPanel } from './LyricsPanel'
 import { SetlistPanel } from './SetlistPanel'
@@ -22,6 +24,8 @@ export function Console() {
   const data = useData()
   const [prefs, setPrefs] = usePrefs()
   const [popupBlocked, setPopupBlocked] = useState(false)
+  const [library, setLibrary] = useState<{ start: LibraryStart } | null>(null)
+  const [notice, setNotice] = useState<(Notice & { id: number }) | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const freeTextRef = useRef<HTMLInputElement>(null)
 
@@ -82,6 +86,26 @@ export function Console() {
     [show.actions, goEntry, entryIndex],
   )
 
+  /* ---------- Avisos con deshacer ---------- */
+
+  const notify = useCallback((n: Notice) => setNotice({ ...n, id: Date.now() }), [])
+  const runUndo = useCallback(() => {
+    const undo = notice?.undo
+    if (!undo) return
+    setNotice(null)
+    void Promise.resolve(undo()).then(() => setNotice({ id: Date.now(), message: 'Listo, se deshizo.' }))
+  }, [notice])
+
+  useEffect(() => {
+    if (!notice) return
+    const ms = notice.tone === 'alerta' ? 10_000 : notice.undo ? 8000 : 4000
+    const t = setTimeout(() => setNotice((n) => (n?.id === notice.id ? null : n)), ms)
+    return () => clearTimeout(t)
+  }, [notice])
+
+  const openLibrary = useCallback((start: LibraryStart) => setLibrary({ start }), [])
+  const closeLibrary = useCallback(() => setLibrary(null), [])
+
   /* ---------- Atajos ---------- */
 
   const messages = band?.quickMessages ?? DEFAULT_QUICK_MESSAGES
@@ -89,6 +113,14 @@ export function Console() {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
       if (t?.closest('input, textarea, select, [contenteditable="true"], [data-drag-handle]')) return
+      // Ctrl+Z deshace lo último que avisó la consola (sacar un tema, borrar, importar).
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && notice?.undo) {
+        e.preventDefault()
+        runUndo()
+        return
+      }
+      // Con Canciones abierto, los atajos del show no corren.
+      if (library) return
       if (e.ctrlKey || e.metaKey || e.altKey) return
       const a = show.actions
       const fn = /^F([1-6])$/.exec(e.key)
@@ -129,7 +161,7 @@ export function Console() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [show.actions, nav, messages])
+  }, [show.actions, nav, messages, library, notice, runUndo])
 
   /* ---------- Acciones de datos ---------- */
 
@@ -157,13 +189,18 @@ export function Console() {
   if (!data.ready) return <div className="con-loading">Cargando…</div>
 
   return (
+    <>
     <div
       className="con"
+      inert={!!library}
       style={{ '--col-setlist': `${prefs.columns.setlist}px`, '--col-controls': `${prefs.columns.controls}px` } as React.CSSProperties}
     >
       <header className="con-bar">
         <Wordmark size={15} />
         <span className="con-bar__title">Gabi Garetto · Teleprompter</span>
+        <Button size="sm" variant="ghost" icon={Music} onClick={() => openLibrary(song ? { songId: song.id } : null)}>
+          Canciones
+        </Button>
         <Clocks prefs={prefs} songDuration={song?.durationSeconds ?? null} />
         <div className="con-bar__right">
           {prefs.showStartedAt ? (
@@ -201,12 +238,21 @@ export function Console() {
           onPickSetlist={(id) => setPrefs({ setlistId: id, entry: 0, pos: null })}
           onCreateSetlist={createSetlist}
           onSaveSetlist={(s) => void store.saveSetlist(s)}
-          onDeleteSetlist={(id) => {
-            void store.deleteSetlist(id)
+          onDeleteSetlist={(s) => {
+            void store.deleteSetlist(s.id)
             setPrefs({ setlistId: null, entry: 0, pos: null })
+            notify({
+              message: `Borraste el setlist “${s.name}”.`,
+              undo: async () => {
+                await store.restoreSetlist(s)
+                setPrefs({ setlistId: s.id, entry: 0, pos: null })
+              },
+            })
           }}
           onSelectEntry={(i) => goEntry(i)}
           onLoadExample={loadExample}
+          onOpenLibrary={openLibrary}
+          notify={notify}
         />
         <Splitter
           label="Ancho del setlist"
@@ -215,7 +261,7 @@ export function Console() {
           max={460}
           onChange={(v) => setPrefs((p) => ({ columns: { ...p.columns, setlist: v } }))}
         />
-        <LyricsPanel song={song} show={show} position={position} />
+        <LyricsPanel song={song} show={show} position={position} onEdit={(id) => openLibrary({ songId: id })} />
         <Splitter
           label="Ancho de los controles"
           value={prefs.columns.controls}
@@ -248,6 +294,30 @@ export function Console() {
         </div>
       )}
     </div>
+
+    {library && (
+      <Library
+        songs={data.songs}
+        setlist={setlist}
+        start={library.start}
+        onClose={closeLibrary}
+        onAddToSetlist={(id) => setlist && void store.saveSetlist({ ...setlist, items: sl.addSong(setlist.items, id) })}
+        notify={notify}
+      />
+    )}
+
+    {notice && (
+      <div className="con-toast con-toast--top" key={notice.id}>
+        <Toast
+          icon={notice.tone === 'alerta' ? TriangleAlert : CircleCheck}
+          tone={notice.tone ?? 'ok'}
+          action={notice.undo ? { label: 'Deshacer', onClick: runUndo } : { label: 'Cerrar', onClick: () => setNotice(null) }}
+        >
+          {notice.message}
+        </Toast>
+      </div>
+    )}
+    </>
   )
 }
 

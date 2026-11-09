@@ -128,3 +128,27 @@ describe('sincronización', () => {
     expect((await repo.listSongs()).map((s) => s.title)).toEqual(['Nueva', 'Remota'])
   })
 })
+
+describe('restaurar y deshacer', () => {
+  it('putRows guarda filas enteras y revertRows deja todo como estaba', async () => {
+    const vieja = await repo.createSong({ title: 'Vieja' })
+    await repo.saveSong({ ...vieja, title: 'Vieja editada' })
+    const nueva = { ...vieja, id: 'del-backup', title: 'Del backup' }
+    const snap = await repo.putRows('songs', [{ ...vieja, title: 'Restaurada' }, nueva])
+
+    expect((await repo.listSongs()).map((s) => s.title)).toEqual(['Del backup', 'Restaurada'])
+    expect((await repo.pending()).songs).toHaveLength(2)
+
+    await repo.revertRows(snap)
+    expect((await repo.listSongs()).map((s) => s.title)).toEqual(['Vieja editada'])
+    // La que no existía queda borrada (así el borrado también se sincroniza).
+    expect((await repo.pending()).songs.find((s) => s.id === 'del-backup')?.deletedAt).not.toBeNull()
+  })
+
+  it('putRows revive una canción borrada', async () => {
+    const s = await repo.createSong({ title: 'Borrada' })
+    await repo.deleteSong(s.id)
+    await repo.putRows('songs', [s])
+    expect(await repo.getSong(s.id)).toMatchObject({ title: 'Borrada', deletedAt: null })
+  })
+})

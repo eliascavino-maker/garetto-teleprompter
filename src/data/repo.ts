@@ -43,6 +43,14 @@ export type NewSong = Partial<Omit<Song, 'id' | 'createdAt' | 'clientUpdatedAt' 
 
 export type NewSetlist = { name: string; showDate?: string | null; items?: SetlistItem[] }
 
+export type RowOf<S extends 'songs' | 'setlists'> = S extends 'songs' ? Song : Setlist
+
+/** Cómo estaban unas filas antes de un cambio grande. null: no existía. */
+export interface Snapshot<S extends 'songs' | 'setlists' = 'songs' | 'setlists'> {
+  store: S
+  rows: Array<{ id: string; prev: RowOf<S> | null }>
+}
+
 /**
  * Acceso a los datos locales. Toda escritura marca la fila como pendiente de
  * subir (dirty) y le pone la hora del equipo, que decide quién gana.
@@ -199,6 +207,34 @@ export class Repo {
     const next = { ...(await this.getDeviceSettings()), ...patch }
     await this.db.put('kv', next, KV_DEVICE)
     return next
+  }
+
+  /* ---------- Restaurar y deshacer ---------- */
+
+  /**
+   * Guarda filas enteras (de un backup, o para deshacer) como edición nueva de
+   * este equipo. Devuelve cómo estaba cada una antes, para poder volver atrás.
+   */
+  async putRows<S extends 'songs' | 'setlists'>(store: S, rows: RowOf<S>[]): Promise<Snapshot<S>> {
+    const now = this.now()
+    const before: Snapshot<S> = { store, rows: [] }
+    for (const row of rows) {
+      const prev = (await this.db.get(store, row.id)) as RowOf<S> | undefined
+      before.rows.push({ id: row.id, prev: prev ?? null })
+      const next = { ...row, deletedAt: null, clientUpdatedAt: now, dirty: 1 as const }
+      await this.db.put(store, (store === 'songs' ? this.normalizeSong(next as Song) : next) as never)
+    }
+    return before
+  }
+
+  /** Deja las filas como estaban en la foto: las que no existían quedan borradas. */
+  async revertRows<S extends 'songs' | 'setlists'>(snapshot: Snapshot<S>): Promise<void> {
+    const now = this.now()
+    for (const { id, prev } of snapshot.rows) {
+      const current = await this.db.get(snapshot.store, id)
+      if (prev) await this.db.put(snapshot.store, { ...prev, clientUpdatedAt: now, dirty: 1 } as never)
+      else if (current && !current.deletedAt) await this.db.put(snapshot.store, { ...current, deletedAt: now, clientUpdatedAt: now, dirty: 1 } as never)
+    }
   }
 
   /* ---------- Sincronización ---------- */

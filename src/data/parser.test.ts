@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { extractCues, isChordLine, parseHeader, parseLyrics, sectionsToText } from './parser'
+import { DEMO_SONG } from '../show/demoSong'
+import { analyzeLyrics, extractCues, isChordLine, parseHeader, parseLyrics, sectionsToText } from './parser'
 import type { Section } from './types'
 
 let n = 0
@@ -101,6 +102,21 @@ describe('parseLyrics', () => {
     const text = '[Intro]\nHola\n\n[Coro x2]\nMandale baile (x2)\nque la noche es larga\n(corte)\n\n[Solo]'
     const once = parseLyrics(text, seqId)
     expect(shape(parseLyrics(sectionsToText(once), seqId))).toEqual(shape(once))
+  })
+
+  it('el tema de ejemplo vuelve a texto y se lee igual', () => {
+    expect(shape(parseLyrics(sectionsToText(DEMO_SONG.sections), seqId))).toEqual(shape(DEMO_SONG.sections))
+  })
+
+  it('saca los acordes entre corchetes y cuenta lo que descartó', () => {
+    const { sections, chordLines } = analyzeLyrics('[Am]Llegamos de [G]lejos\n[C] [G]\nAm   G\ncon ganas [de] fiesta', seqId)
+    expect(shape(sections)[0].lines).toEqual(['Llegamos de lejos', 'con ganas [de] fiesta'])
+    expect(chordLines).toEqual(['[C] [G]', 'Am   G'])
+  })
+
+  it('un encabezado con nombre propio conserva el tipo de parte', () => {
+    expect(parse('[Coro final]\nY se va')[0]).toMatchObject({ label: 'Coro final', kind: 'coro' })
+    expect(parse('Hola\n[corte]\n\nChau')[0].lines).toEqual(['Hola [corte]'])
   })
 })
 

@@ -3,19 +3,23 @@ import { formatDuration } from '../data/setlist'
 import type { Song } from '../data/types'
 import { findStep, pageOfLine } from '../show/cursor'
 import type { ShowController } from '../show/useShow'
-import { Cue } from '../ui/components'
+import { Pencil } from 'lucide-react'
+import { Button, Cue } from '../ui/components'
 import { cx } from '../ui/cx'
-
-const KIND_LABEL: Record<Song['kind'], string> = {
-  propia: 'Propia',
-  cuarteto: 'Cuarteto',
-  cumbia: 'Cumbia',
-  cover: 'Cover',
-  otro: 'Otro',
-}
+import { SONG_KIND_LABEL } from '../ui/labels'
 
 /** La letra del tema en curso. Clic en una línea para saltar ahí. */
-export function LyricsPanel({ song, show, position }: { song: Song | null; show: ShowController; position: string | null }) {
+export function LyricsPanel({
+  song,
+  show,
+  position,
+  onEdit,
+}: {
+  song: Song | null
+  show: ShowController
+  position: string | null
+  onEdit: (songId: string) => void
+}) {
   const body = useRef<HTMLDivElement>(null)
   const step = show.step
 
@@ -46,9 +50,14 @@ export function LyricsPanel({ song, show, position }: { song: Song | null; show:
   return (
     <section className="panel con-lyrics" aria-label="Letra">
       <header className="ly-head">
-        <h2>{song.title}</h2>
+        <div className="ly-head__row">
+          <h2>{song.title}</h2>
+          <Button size="sm" variant="ghost" icon={Pencil} onClick={() => onEdit(song.id)} aria-label="Editar este tema">
+            Editar
+          </Button>
+        </div>
         <div className="ly-head__meta">
-          <span>{KIND_LABEL[song.kind]}</span>
+          <span>{SONG_KIND_LABEL[song.kind]}</span>
           {song.artist && <span>{song.artist}</span>}
           {song.durationSeconds != null && <span className="tabular">{formatDuration(song.durationSeconds)}</span>}
           <span>{show.mode === 'linea' ? 'Por línea' : 'Por parte'}</span>

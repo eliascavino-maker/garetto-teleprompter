@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { makeBackup, type Backup, type BackupContent } from './backup'
 import { openTpDb } from './db'
 import { DEFAULT_DEVICE, Repo, type NewSetlist, type NewSong } from './repo'
 import type { BandSettings, DeviceSettings, Setlist, Song } from './types'
@@ -78,6 +79,53 @@ export class DataStore {
   }
   async saveDeviceSettings(patch: Partial<DeviceSettings>) {
     return this.write((r) => r.saveDeviceSettings(patch))
+  }
+
+  /** Varias canciones de una vez (importación). Devuelve las creadas, en orden. */
+  async createSongs(inputs: NewSong[]) {
+    return this.write(async (r) => {
+      const created: Song[] = []
+      for (const input of inputs) created.push(await r.createSong(input))
+      return created
+    })
+  }
+
+  /** Vuelve a guardar una canción como estaba (por ejemplo, para deshacer un borrado). */
+  async restoreSong(song: Song) {
+    return this.write((r) => r.putRows('songs', [song]))
+  }
+
+  async restoreSetlist(setlist: Setlist) {
+    return this.write((r) => r.putRows('setlists', [setlist]))
+  }
+
+  /** Restaura un backup. Devuelve una función que lo deshace. */
+  async restoreBackup(content: BackupContent): Promise<() => Promise<void>> {
+    return this.write(async (r) => {
+      const songs = await r.putRows('songs', content.songs)
+      const setlists = await r.putRows('setlists', content.setlists)
+      const prevBand = await r.getBandSettings()
+      if (content.band) {
+        const { quickMessages, ...rest } = content.band
+        await r.saveBandSettings(quickMessages.length ? content.band : rest)
+      }
+      return async () => {
+        await this.write(async (repo) => {
+          await repo.revertRows(songs)
+          await repo.revertRows(setlists)
+          if (content.band) {
+            const { quickMessages, defaultAdvance, theme } = prevBand
+            await repo.saveBandSettings({ quickMessages, defaultAdvance, theme })
+          }
+        })
+      }
+    })
+  }
+
+  /** Todo lo que hay, listo para bajar como .json. */
+  backup(): Backup {
+    const { songs, setlists, band } = this.snapshot
+    return makeBackup(songs, setlists, band)
   }
 
   /* ---------- Interno ---------- */

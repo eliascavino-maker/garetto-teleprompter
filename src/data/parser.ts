@@ -51,6 +51,13 @@ export function isChordLine(raw: string): boolean {
   return strong || /\S {2,}\S/.test(raw.trim())
 }
 
+const isChord = (t: string) => EN_CHORD.test(t) || ES_CHORD.test(t)
+
+/** Saca los acordes entre corchetes metidos en la letra: "[Am]Llegamos de [G]lejos". */
+export function stripInlineChords(raw: string): string {
+  return raw.replace(/\[([^\]\s]+)\]/g, (whole, inner: string) => (isChord(inner) ? '' : whole))
+}
+
 /* ---------- Indicaciones ---------- */
 
 const CUE_WORDS: Record<string, CueKind> = {
@@ -130,12 +137,16 @@ export function parseHeader(raw: string): Header | null {
 
   // [Cualquier cosa]
   const bracket = line.match(/^\[(.+)\]:?$/)
+  // "[corte]" o "[silencio]" son indicaciones, no partes.
+  if (bracket && /^(corte|silencio)$/i.test(bracket[1].trim())) return null
   if (bracket) {
     const known = knownHeader(bracket[1])
     if (known) return known
     const cues: CueKind[] = REPEAT.test(bracket[1]) ? ['x2'] : []
     const label = collapse(bracket[1].replace(REPEAT, ''))
-    return label ? { label, kind: 'otro', cues } : null
+    // "[Coro final]" sigue siendo un coro; "[Hablado]" queda como "otro".
+    const kind = kindOf(label.split(' ')[0]) ?? 'otro'
+    return label ? { label, kind, cues } : null
   }
 
   // (Coro), Coro:, CORO, Coro x2
@@ -171,8 +182,13 @@ function splitBlocks(lines: string[]): string[][] {
   return blocks
 }
 
-function draftFrom(block: string[], newId: NewId): Draft | null {
-  const rows = block.filter((l) => !isChordLine(l))
+function draftFrom(block: string[], newId: NewId, dropped: string[]): Draft | null {
+  const rows: string[] = []
+  for (const raw of block) {
+    const clean = stripInlineChords(raw)
+    if (isChordLine(raw) || !clean.trim()) dropped.push(raw.trim())
+    else rows.push(clean)
+  }
   if (rows.length === 0) return null
 
   const header = parseHeader(rows[0])
@@ -196,9 +212,21 @@ const keyOf = (lines: Line[]) => lines.map((l) => l.text.toLocaleLowerCase('es')
 
 /** Convierte texto plano en partes. */
 export function parseLyrics(text: string, newId: NewId = defaultId): Section[] {
+  return analyzeLyrics(text, newId).sections
+}
+
+export interface LyricsAnalysis {
+  sections: Section[]
+  /** Renglones que se descartaron por ser acordes, para mostrarlos en el editor. */
+  chordLines: string[]
+}
+
+/** Como parseLyrics, pero también cuenta qué se descartó. */
+export function analyzeLyrics(text: string, newId: NewId = defaultId): LyricsAnalysis {
+  const chordLines: string[] = []
   const drafts: Draft[] = []
   for (const block of splitBlocks(normalizeText(text))) {
-    const d = draftFrom(block, newId)
+    const d = draftFrom(block, newId, chordLines)
     if (!d) continue
     if (!d.header && d.lines.length === 0) {
       // Un bloque que es solo "(corte)" o "x2" no es una parte nueva:
@@ -238,12 +266,12 @@ export function parseLyrics(text: string, newId: NewId = defaultId): Section[] {
 
     sections.push({ id: newId(), label, kind, cues: d.cues, lines })
   }
-  return sections
+  return { sections, chordLines }
 }
 
 /* ---------- De vuelta a texto (para el editor) ---------- */
 
-const CUE_TEXT: Record<CueKind, string> = { x2: '(x2)', corte: '(corte)', silencio: '(silencio)', solo: '(solo)' }
+export const CUE_TEXT: Record<CueKind, string> = { x2: '(x2)', corte: '(corte)', silencio: '(silencio)', solo: '(solo)' }
 
 export function sectionsToText(sections: Section[]): string {
   return sections
